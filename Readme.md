@@ -91,7 +91,7 @@ Here is an exemple of an "Automation Chain" defined via a script
   		         doc.addFacet(params.facet);
   		         updated.push(Document.Save(doc,{}));
   		      }
-  		   }o
+  		   }
              return updated;
            }
            ]]>
