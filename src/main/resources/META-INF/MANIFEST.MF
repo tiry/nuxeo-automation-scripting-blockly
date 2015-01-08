@@ -6,5 +6,6 @@ Bundle-Name: org.nuxeo.ecm.automation.scripting
 Bundle-ManifestVersion: 2
 Nuxeo-Component: OSGI-INF/automation-scripting-service.xml
 Bundle-SymbolicName: org.nuxeo.ecm.automation.scripting
+Nuxeo-WebModule: org.nuxeo.automation.scripting.blockly.BlocklyModule;name=blockly;extends=base;package=org/nuxeo/automation/scripting/blockly
 
 

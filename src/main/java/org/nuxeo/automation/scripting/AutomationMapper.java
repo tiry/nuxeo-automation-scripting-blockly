@@ -27,28 +27,6 @@ public class AutomationMapper {
         this.session = session;
     }
 
-    public String sayHello() {
-        return "\nHello";
-    }
-
-    public String sayHelloTo(String who) {
-        return "\nHello " + who;
-    }
-
-    public String sayHelloNumber(Integer i) {
-        return "\nHello " + i;
-    }
-
-    public String sayHelloSomething(NativeObject o) {
-        System.out.println(o.getClass().getCanonicalName());
-
-        System.out.println(o.getAssociatedValue("a"));
-
-        System.out.println(o.get("a"));
-        System.out.println(o.get("b"));
-        return "\nHello " + o.toString();
-    }
-
     public Object executeOperation(String opId, Object input, NativeObject parameters) throws Exception {
         AutomationService as = Framework.getService(AutomationService.class);
         OperationContext ctx = new OperationContext(session);
