@@ -19,7 +19,6 @@
        </script>       
     </scriptedOperation>
 
-
     <scriptedOperation id="Scripting.AddFacetInSubTree">
        <inputType>Document</inputType>
        <outputType>Documents</outputType>       
@@ -54,6 +53,20 @@
        </script>       
     </scriptedOperation>
         
+  </extension>
+
+  <extension point="chains"
+    target="org.nuxeo.ecm.core.operation.OperationServiceComponent">
+
+    <chain id="Scripting.ChainedHello">
+      <operation id="Scripting.HelloWorld">
+        <param type="string" name="lang">fr</param>
+      </operation>
+      <operation id="Scripting.HelloWorld">
+        <param type="string" name="lang">en</param>
+      </operation>
+    </chain>
+
   </extension>
 
 </component>

@@ -22,11 +22,11 @@ import sun.org.mozilla.javascript.NativeObject;
 public class AutomationMapper {
 
     protected final CoreSession session;
-    
+
     public AutomationMapper(CoreSession session) {
-        this.session=session;        
+        this.session = session;
     }
-    
+
     public String sayHello() {
         return "\nHello";
     }
@@ -34,31 +34,31 @@ public class AutomationMapper {
     public String sayHelloTo(String who) {
         return "\nHello " + who;
     }
-    
+
     public String sayHelloNumber(Integer i) {
-        return "\nHello " +i;
+        return "\nHello " + i;
     }
 
     public String sayHelloSomething(NativeObject o) {
         System.out.println(o.getClass().getCanonicalName());
-        
+
         System.out.println(o.getAssociatedValue("a"));
-        
+
         System.out.println(o.get("a"));
         System.out.println(o.get("b"));
-        return "\nHello " +o.toString();
+        return "\nHello " + o.toString();
     }
-    
-    public Object executeOperation(String opId, Object input, NativeObject parameters ) throws Exception {
-        AutomationService as = Framework.getService(AutomationService.class);        
-        OperationContext ctx = new OperationContext(session);        
-        populateContext(ctx, input);        
-        Map<String, Object> params = unwrapParameters(parameters);        
-        return as.run(ctx, opId, params);        
+
+    public Object executeOperation(String opId, Object input, NativeObject parameters) throws Exception {
+        AutomationService as = Framework.getService(AutomationService.class);
+        OperationContext ctx = new OperationContext(session);
+        populateContext(ctx, input);
+        Map<String, Object> params = unwrapParameters(parameters);
+        return as.run(ctx, opId, params);
     }
-    
-    protected void populateContext(OperationContext ctx , Object input) {
-     
+
+    protected void populateContext(OperationContext ctx, Object input) {
+
         if (input instanceof String) {
             ctx.setInput((String) input);
         } else if (input instanceof DocumentModel) {
@@ -69,65 +69,65 @@ public class AutomationMapper {
             ctx.setInput((Blob) input);
         } else if (input instanceof NativeObject) {
             ctx.setInput(extractProperties((NativeObject) input));
-        }       
+        }
     }
 
-    protected Map<String,Object> unwrapParameters(NativeObject parameters) {
+    protected Map<String, Object> unwrapParameters(NativeObject parameters) {
         Map<String, Object> params = new HashMap<String, Object>();
         for (Object k : parameters.keySet()) {
-            Object value =  parameters.get(k);
+            Object value = parameters.get(k);
             if (value instanceof NativeObject) {
-                params.put((String) k, extractProperties((NativeObject)value));
+                params.put((String) k, extractProperties((NativeObject) value));
             } else if (value instanceof NativeArray) {
-                params.put((String)k, extractList((NativeArray)value));
+                params.put((String) k, extractList((NativeArray) value));
             } else {
-                if (value!=null) {
+                if (value != null) {
                     params.put((String) k, value.toString());
                 } else {
                     params.put((String) k, null);
                 }
             }
-        }        
+        }
         return params;
     }
-    
-    protected Properties extractProperties(NativeObject parameters) {        
-        DataModelProperties props = new DataModelProperties();        
+
+    protected Properties extractProperties(NativeObject parameters) {
+        DataModelProperties props = new DataModelProperties();
         Map<String, Object> data = extractMap(parameters);
         for (String k : data.keySet()) {
-            props.getMap().put(k, (Serializable)data.get(k));
+            props.getMap().put(k, (Serializable) data.get(k));
         }
-        //props.getMap().putAll((Map<? extends String, ? extends Serializable>) data);
-        return props;        
+        // props.getMap().putAll((Map<? extends String, ? extends Serializable>) data);
+        return props;
     }
-        
-    protected Map<String, Object> extractMap(NativeObject parameters) {        
-        Map<String, Object> params = new HashMap<String, Object>();        
+
+    protected Map<String, Object> extractMap(NativeObject parameters) {
+        Map<String, Object> params = new HashMap<String, Object>();
         for (Object k : parameters.keySet()) {
-            Object value =  parameters.get(k);
+            Object value = parameters.get(k);
             if (value instanceof NativeObject) {
-                params.put((String) k, extractMap((NativeObject)value));
+                params.put((String) k, extractMap((NativeObject) value));
             } else if (value instanceof NativeArray) {
-                params.put((String)k, extractList((NativeArray)value));
+                params.put((String) k, extractList((NativeArray) value));
             } else {
-                if (value!=null) {
+                if (value != null) {
                     params.put((String) k, value.toString());
                 } else {
                     params.put((String) k, null);
                 }
             }
-        }        
+        }
         return params;
     }
-    
+
     protected List<Object> extractList(NativeArray narray) {
-        
-        List<Object> result = new ArrayList<>();        
+
+        List<Object> result = new ArrayList<>();
         for (Object entry : narray) {
             if (entry instanceof NativeObject) {
-                result.add(extractMap((NativeObject)entry));                
+                result.add(extractMap((NativeObject) entry));
             } else if (entry instanceof NativeArray) {
-                result.add(extractList((NativeArray)entry));
+                result.add(extractList((NativeArray) entry));
             } else {
                 result.add(entry);
             }

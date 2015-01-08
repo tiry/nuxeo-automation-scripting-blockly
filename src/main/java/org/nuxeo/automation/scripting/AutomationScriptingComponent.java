@@ -5,7 +5,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.script.Compilable;
+import javax.script.CompiledScript;
 import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 
 import org.nuxeo.automation.scripting.operation.ScriptingOperationDescriptor;
 import org.nuxeo.automation.scripting.operation.ScriptingTypeImpl;
@@ -19,28 +22,39 @@ import org.nuxeo.runtime.model.DefaultComponent;
 
 public class AutomationScriptingComponent extends DefaultComponent implements AutomationScriptingService {
 
-    protected ScriptEngineManager engineManager;   
+    protected ScriptEngineManager engineManager;
+
+    protected Compilable compiler;
+
     protected int nbFunctions = 0;
-    protected String jsWrapper=null;
-    
+
+    protected String jsWrapper = null;
+
+    protected CompiledScript compiledJSWrapper = null;
+
+    protected static final boolean preCompile = true;
+
     public static final String EP_OP = "operation";
-    
+
     @Override
     public void activate(ComponentContext context) throws Exception {
         super.activate(context);
         engineManager = new ScriptEngineManager();
+        if (preCompile) {
+            compiler = (Compilable) engineManager.getEngineByName("javascript");
+        }
     }
-    
+
     @Override
     public void registerContribution(Object contribution, String extensionPoint, ComponentInstance contributor)
             throws Exception {
 
         if (EP_OP.equals(extensionPoint)) {
             ScriptingOperationDescriptor desc = (ScriptingOperationDescriptor) contribution;
-            AutomationService as =Framework.getService(AutomationService.class);
-            ScriptingTypeImpl type = new ScriptingTypeImpl(as, desc);            
+            AutomationService as = Framework.getService(AutomationService.class);
+            ScriptingTypeImpl type = new ScriptingTypeImpl(as, desc);
             as.putOperation(type, true);
-        } else {        
+        } else {
             super.registerContribution(contribution, extensionPoint, contributor);
         }
     }
@@ -48,27 +62,33 @@ public class AutomationScriptingComponent extends DefaultComponent implements Au
     public String getJSWrapper() {
         return getJSWrapper(false);
     }
-    
-    
-    
+
+    public synchronized CompiledScript getCompiledJSWrapper() throws ScriptException {
+        if (compiledJSWrapper == null) {
+            String script = getJSWrapper(false);
+            compiledJSWrapper = compiler.compile(script);
+        }
+        return compiledJSWrapper;
+    }
+
     public synchronized String getJSWrapper(boolean refresh) {
-        
-        if (jsWrapper==null || refresh) {
-            nbFunctions=0;
+
+        if (jsWrapper == null || refresh) {
+            nbFunctions = 0;
             StringBuffer sb = new StringBuffer();
-            
-            AutomationService as = Framework.getService(AutomationService.class);            
-            
+
+            AutomationService as = Framework.getService(AutomationService.class);
+
             Map<String, List<OperationType>> opMap = new HashMap<String, List<OperationType>>();
             List<OperationType> flatOps = new ArrayList<>();
-            
+
             for (OperationType op : as.getOperations()) {
                 String id = op.getId();
                 int idx = id.indexOf(".");
-                if (idx > 0 ) {
-                    String obName = id.substring(0, idx);                    
+                if (idx > 0) {
+                    String obName = id.substring(0, idx);
                     List<OperationType> ops = opMap.get(obName);
-                    if (ops==null) {
+                    if (ops == null) {
                         ops = new ArrayList<>();
                     }
                     ops.add(op);
@@ -77,11 +97,11 @@ public class AutomationScriptingComponent extends DefaultComponent implements Au
                     flatOps.add(op);
                 }
             }
-            
+
             for (String obName : opMap.keySet()) {
                 List<OperationType> ops = opMap.get(obName);
                 sb.append("\nvar " + obName + "={};");
-                
+
                 for (OperationType op : ops) {
                     generateFunction(sb, op);
                 }
@@ -91,27 +111,32 @@ public class AutomationScriptingComponent extends DefaultComponent implements Au
             }
 
             jsWrapper = sb.toString();
-                        
+
         }
         return jsWrapper;
-    }   
-    
-    protected void generateFunction(StringBuffer sb, OperationType op) {            
-        sb.append("\n" + op.getId() + " = function(input,params) {");                
-        sb.append("\nreturn automation.executeOperation('" + op.getId() + "', input , params);");         
+    }
+
+    protected void generateFunction(StringBuffer sb, OperationType op) {
+        sb.append("\n" + op.getId() + " = function(input,params) {");
+        sb.append("\nreturn automation.executeOperation('" + op.getId() + "', input , params);");
         sb.append("\n};");
         nbFunctions++;
     }
 
-    public ScriptRunner getRunner(CoreSession session) {        
-        ScriptRunner runner = new ScriptRunner(engineManager,getJSWrapper());
+    public ScriptRunner getRunner(CoreSession session) throws ScriptException {
+        ScriptRunner runner = getRunner();
         runner.setCoreSession(session);
-        return runner;        
+        return runner;
     }
 
-    public ScriptRunner getRunner() {        
-        ScriptRunner runner = new ScriptRunner(engineManager,getJSWrapper());
-        return runner;        
+    public ScriptRunner getRunner() throws ScriptException {
+        ScriptRunner runner = null;
+        if (!preCompile) {
+            runner = new ScriptRunner(engineManager, getJSWrapper());
+        } else {
+            runner = new ScriptRunner(engineManager, getCompiledJSWrapper());
+        }
+        return runner;
     }
 
 }

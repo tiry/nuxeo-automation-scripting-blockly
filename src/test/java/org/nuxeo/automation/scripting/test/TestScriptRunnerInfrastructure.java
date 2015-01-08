@@ -50,7 +50,7 @@ public class TestScriptRunnerInfrastructure {
         Assert.assertNotNull(ass);
     }
         
-    //@Test
+    @Test
     public void shouldExecuteSimpleScript() throws Exception {
             
         AutomationScriptingService ass = Framework.getService(AutomationScriptingService.class);
@@ -122,6 +122,18 @@ public class TestScriptRunnerInfrastructure {
         ctx.setInput(root);                              
         Object result = as.run(ctx,"Scripting.AddFacetInSubTree" , params);        
         Assert.assertTrue(result instanceof DocumentModelList);
+        
+    }
+
+    @Test
+    public void simpleScriptingOperationsInChain() throws Exception {     
+                
+        OperationContext ctx = new OperationContext(session);
+        Map<String, Object> params = new HashMap<>();        
+        
+        ctx.setInput("John");                              
+        Object result = as.run(ctx,"Scripting.ChainedHello" , params);        
+        Assert.assertEquals("Hello Bonjour John", result);                
         
     }
 

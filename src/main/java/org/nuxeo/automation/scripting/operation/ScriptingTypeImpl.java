@@ -21,17 +21,18 @@ import org.nuxeo.ecm.core.api.DocumentRef;
 import org.nuxeo.ecm.core.api.DocumentRefList;
 
 public class ScriptingTypeImpl implements OperationType {
-    
+
     protected final AutomationService service;
+
     protected final ScriptingOperationDescriptor desc;
-    
-    public ScriptingTypeImpl(AutomationService service, ScriptingOperationDescriptor desc) {        
-        this.service=service;
-        this.desc=desc;
+
+    public ScriptingTypeImpl(AutomationService service, ScriptingOperationDescriptor desc) {
+        this.service = service;
+        this.desc = desc;
     }
-    
+
     protected InvokableMethod[] methods = new InvokableMethod[] { runMethod() };
-    
+
     @Override
     public String getContributingComponent() {
         return null;
@@ -40,7 +41,7 @@ public class ScriptingTypeImpl implements OperationType {
     @Override
     public OperationDocumentation getDocumentation() throws OperationException {
         OperationDocumentation doc = new OperationDocumentation(getId());
-        doc.label = getId();        
+        doc.label = getId();
         doc.category = desc.getCategory();
         doc.description = desc.getDescription();
         doc.params = desc.getParams();
@@ -82,15 +83,15 @@ public class ScriptingTypeImpl implements OperationType {
     public InvokableMethod[] getMethodsMatchingInput(Class<?> in) {
         return methods;
     }
-    
+
     protected InvokableMethod runMethod() {
         try {
-            return new InvokableMethod(this, ScriptingOperationImpl.class.getMethod("run",Object.class));
+            return new InvokableMethod(this, ScriptingOperationImpl.class.getMethod("run", Object.class));
         } catch (NoSuchMethodException | SecurityException e) {
             throw new UnsupportedOperationException("Cannot use reflection for run method", e);
         }
     }
-    
+
     @Override
     public AutomationService getService() {
         return service;
@@ -101,13 +102,18 @@ public class ScriptingTypeImpl implements OperationType {
         return ScriptingOperationImpl.class;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public Object newInstance(OperationContext ctx, Map<String, Object> args) throws Exception {
+
+        // XXX cache the ScriptingOperationImpl to avoid create new Engine instance ?
+        // => would be interesting to share the engine across diffrent op inside the same chain ?
+
         if (ctx.getVars().containsKey(Constants.VAR_RUNTIME_CHAIN)) {
             // WTF !!!
-            args.putAll((Map<String,Object>)ctx.getVars().get(Constants.VAR_RUNTIME_CHAIN));
+            args.putAll((Map<String, Object>) ctx.getVars().get(Constants.VAR_RUNTIME_CHAIN));
         }
-        ScriptingOperationImpl impl = new ScriptingOperationImpl(desc.getScript(), ctx, args);                
+        ScriptingOperationImpl impl = new ScriptingOperationImpl(desc.getScript(), ctx, args);
         return impl;
     }
 

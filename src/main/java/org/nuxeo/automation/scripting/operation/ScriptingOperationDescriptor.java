@@ -6,14 +6,14 @@ import org.nuxeo.common.xmap.annotation.XObject;
 import org.nuxeo.ecm.automation.OperationDocumentation;
 
 @XObject("scriptedOperation")
-public class ScriptingOperationDescriptor {    
-    
+public class ScriptingOperationDescriptor {
+
     @XNode("@id")
     protected String id;
 
     @XNode("inputType")
     protected String inputType;
-    
+
     @XNode("outputType")
     protected String outputType;
 
@@ -25,10 +25,10 @@ public class ScriptingOperationDescriptor {
 
     @XNodeList(value = "param", type = OperationDocumentation.Param[].class, componentType = OperationDocumentation.Param.class)
     protected OperationDocumentation.Param[] params = new OperationDocumentation.Param[0];
-    
+
     @XNode("script")
     protected String script;
-   
+
     public String getInputType() {
         return inputType;
     }
