@@ -90,11 +90,11 @@ public class BlocklyRoot extends ModuleRoot {
     public Object getBlocks() {
         AutomationService as = Framework.getService(AutomationService.class);
         
-        List<OperationType> ops = new ArrayList<>();
+        List<BlocklyOperationWrapper> ops = new ArrayList<>();
         for (OperationType opType : as.getOperations()) {
             try {
                 opType.getDocumentation();
-                ops.add(opType);
+                ops.add(new BlocklyOperationWrapper(opType));
             } catch (OperationException e) {
                 System.out.println("Exeception on OP " + opType.getClass().getSimpleName());
             }

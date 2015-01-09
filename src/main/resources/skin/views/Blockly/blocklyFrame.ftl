@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8">
     <script src="${skinPath}/blockly/blockly_compressed.js"></script>
+    <script src="${skinPath}/blockly/gen/javascript_compressed.js"></script>
     <script src="${skinPath}/blockly/blocks_compressed.js"></script>
     <script src="${skinPath}/blockly/msg/js/en.js"></script>
     <script src="${Root.path}/blocks"></script>
@@ -36,7 +37,18 @@
     	<block type="controls_forEach"></block>
     	<block type="controls_flow_statements"></block>
      </category>
-     <category name="Functions" custom="PROCEDURE"></category>       	
+     <category name="Functions" custom="PROCEDURE"></category>    
+     <category name="Variables" custom="VARIABLE"></category>
+     <category name="Text">
+      <block type="text"></block>
+      <block type="text_length"></block>
+      <block type="text_print"></block>
+      <block type="text_prompt_ext">
+        <value name="TEXT">
+          <block type="text"></block>
+        </value>
+      </block>
+    </category>   	
   	<category name="Math">
       <block type="math_number"></block>
       <block type="math_arithmetic"></block>
@@ -80,14 +92,14 @@
       </block>
       <block type="math_random_float"></block>
     </category>
-    <category name="Automation">
-        <block type="automation1"></block>
-        <block type="automation2"></block>
-    </category>    
     <category name="Logic">
         <block type="logic_compare"></block>
         <block type="logic_operation"></block>
         <block type="logic_boolean"></block>
+    </category>
+    <category name="Automation : Helpers">
+        <block type="Automation.SwallowOutput"></block>
+        <block type="Automation.GetDocumentProperty"></block>
     </category>
     <#list This.getCategories() as cat>
     <category name="Automation : ${cat}">
