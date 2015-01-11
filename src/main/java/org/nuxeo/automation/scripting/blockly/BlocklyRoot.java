@@ -17,17 +17,28 @@
        
 package org.nuxeo.automation.scripting.blockly;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
 
+import org.apache.commons.io.IOUtils;
 import org.nuxeo.ecm.automation.AutomationService;
 import org.nuxeo.ecm.automation.OperationException;
 import org.nuxeo.ecm.automation.OperationType;
+import org.nuxeo.ecm.core.api.Blob;
+import org.nuxeo.ecm.core.api.impl.blob.StringBlob;
+import org.nuxeo.ecm.platform.web.common.ServletHelper;
+import org.nuxeo.ecm.webengine.forms.FormData;
 import org.nuxeo.ecm.webengine.model.WebObject;
 import org.nuxeo.ecm.webengine.model.impl.ModuleRoot;
 import org.nuxeo.runtime.api.Framework;
@@ -37,11 +48,17 @@ import org.nuxeo.runtime.api.Framework;
 @WebObject(type = "Blockly")
 public class BlocklyRoot extends ModuleRoot {
 
-
     @GET
     @Path("/")
     @Produces({ MediaType.TEXT_HTML})           
-    public Object getEditor() {
+    public Object getEditor(@QueryParam("sample") String sample) throws IOException {;
+        if (sample!=null && sample.endsWith(".xml")) {
+            InputStream is = this.getClass().getResourceAsStream("/" + sample);
+            if (is!=null) {
+                String xml = IOUtils.toString(is, "UTF-8");
+                return getView("editor").arg("xml",xml);
+            }
+        }
         return getView("editor");
     }
 
@@ -101,5 +118,46 @@ public class BlocklyRoot extends ModuleRoot {
         }        
         return getView("automationBlocks").arg("operations", ops);
     }
+    
+    @POST
+    @Path("/save")    
+    public Response save() {        
+        FormData form = getContext().getForm();        
+        String xmlFileName = form.getString("xmlFileName");
+        String xml = form.getString("xml");        
+        String contentDisposition = ServletHelper.getRFC2231ContentDisposition(
+                ctx.getRequest(), xmlFileName);
+        Blob blob = new StringBlob(xml);
+        ResponseBuilder builder = Response.ok(blob).header(
+                "Content-Disposition", contentDisposition).type(
+                blob.getMimeType());
+        return builder.build();
+    }
+
+    
+    @POST
+    @Path("/")    
+    public Object load() throws IOException {        
+        FormData form = getContext().getForm();
+        Blob blob = form.getBlob("xmlFile");        
+        return getView("editor").arg("xml",blob.getString());
+    }
+
+    @POST        
+    @Path("/downloadJS")    
+    public Response downloadJS() {        
+        FormData form = getContext().getForm();        
+        String jsFileName = form.getString("jsFileName");
+        String js = form.getString("js");        
+        String contentDisposition = ServletHelper.getRFC2231ContentDisposition(
+                ctx.getRequest(), jsFileName);
+        Blob blob = new StringBlob(js);
+        ResponseBuilder builder = Response.ok(blob).header(
+                "Content-Disposition", contentDisposition).type(
+                blob.getMimeType());
+        return builder.build();
+    }
+
+    
     
 }

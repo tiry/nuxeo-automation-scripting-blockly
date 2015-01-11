@@ -1,3 +1,8 @@
 .tabContent {
- 
+ padding:8px; 
+}
+
+iframe {
+ border-width=0;
+ border-style:none; 
 }

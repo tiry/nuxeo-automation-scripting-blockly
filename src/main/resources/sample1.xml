@@ -1,0 +1,72 @@
+<xml xmlns="http://www.w3.org/1999/xhtml">
+  <block type="controls_forEach" id="253" inline="false" x="157" y="71">
+    <field name="VAR">doc</field>
+    <value name="LIST">
+      <block type="Document.Query" id="203" inline="false">
+        <value name="query">
+          <block type="text" id="209">
+            <field name="TEXT">select * from Document</field>
+          </block>
+        </value>
+        <value name="currentPageIndex">
+          <block type="math_number" id="228">
+            <field name="NUM">0</field>
+          </block>
+        </value>
+        <value name="pageSize">
+          <block type="math_number" id="247">
+            <field name="NUM">20</field>
+          </block>
+        </value>
+      </block>
+    </value>
+    <statement name="DO">
+      <block type="controls_if" id="259" inline="false">
+        <value name="IF0">
+          <block type="logic_compare" id="263" inline="true">
+            <field name="OP">EQ</field>
+            <value name="A">
+              <block type="Automation.GetDocumentProperty" id="271" inline="false">
+                <field name="EXPR">type</field>
+                <value name="INPUT">
+                  <block type="variables_get" id="268">
+                    <field name="VAR">doc</field>
+                  </block>
+                </value>
+              </block>
+            </value>
+            <value name="B">
+              <block type="text" id="277">
+                <field name="TEXT">File</field>
+              </block>
+            </value>
+          </block>
+        </value>
+        <statement name="DO0">
+          <block type="Automation.SwallowOutput" id="320" inline="false">
+            <value name="INPUT">
+              <block type="Document.SetProperty" id="317" inline="false">
+                <field name="save">TRUE</field>
+                <value name="INPUT">
+                  <block type="variables_get" id="325">
+                    <field name="VAR">doc</field>
+                  </block>
+                </value>
+                <value name="xpath">
+                  <block type="text" id="331">
+                    <field name="TEXT">dc:nature</field>
+                  </block>
+                </value>
+                <value name="value">
+                  <block type="text" id="337">
+                    <field name="TEXT">This is a File</field>
+                  </block>
+                </value>
+              </block>
+            </value>
+          </block>
+        </statement>
+      </block>
+    </statement>
+  </block>
+</xml>

@@ -41,6 +41,10 @@ Blockly.JavaScript['Automation.GetDocumentProperty'] = function (block) {
   var code = Blockly.JavaScript.valueToCode(block, 'INPUT', Blockly.JavaScript.ORDER_MEMBER);
   if (expr == 'lifeCycle') {
      suffix += "getCurrentLifeCycle()";     
+  } else if (expr == 'name') {
+     suffix += "getName()";     
+  } else if (expr == 'type') {
+     suffix += "getType()";     
   } else {
      suffix += "getPropertyValue('" + expr + "')";
   } 
@@ -92,10 +96,19 @@ Blockly.JavaScript['${op.id}'] = function(block) {
 <#list op.params as param>    
     <#if param.getType()=="boolean">
        code += '"${param.name}":' + block.getFieldValue('${param.name}');
+       code +=",";
     <#else>
-       code += '"${param.name}":' + Blockly.JavaScript.valueToCode(block,'${param.name}',  Blockly.JavaScript.ORDER_MEMBER);
+       var pVal = Blockly.JavaScript.valueToCode(block,'${param.name}',Blockly.JavaScript.ORDER_MEMBER);
+       if (typeof pVal != 'undefined' && !pVal=='') {                
+       	code += '"${param.name}":' + pVal;
+       	code +=",";
+       }
     </#if>    
-</#list>          
+    
+</#list>
+  if (code.lastIndexOf(",")==code.length-1) {
+    code = code.substring(0, code.length-1);
+  }          
   code += '})'  
 
   return [code,  Blockly.JavaScript.ORDER_NONE];
