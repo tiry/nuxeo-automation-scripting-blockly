@@ -62,19 +62,29 @@ Blockly.Blocks['${op.id}'] = {
         .appendField("${op.id}")
     
 <#if op.hasInput()>
-   this.appendValueInput('INPUT')
-        .appendField(' - Input');
+   var inputField = this.appendValueInput('INPUT')
+        .appendField('  Input').setAlign(Blockly.ALIGN_RIGHT);
+   <#if op.getInputTypes()??>
+     	inputField.setCheck(${op.getInputTypes()});
+   </#if>
 </#if>        
 <#list op.params as param>    
     <#if param.getType()=="boolean">
-       this.appendDummyInput().appendField(' - ${param.name}').appendField(new Blockly.FieldCheckbox('FALSE'), '${param.name}');
+       this.appendDummyInput().appendField('  ${param.name}').appendField(new Blockly.FieldCheckbox('FALSE'), '${param.name}').setAlign(Blockly.ALIGN_RIGHT);
+    <#elseif param.getType()=="integer">
+       this.appendValueInput('${param.name}')
+           .appendField('  ${param.name}').setCheck('Number').setAlign(Blockly.ALIGN_RIGHT);
     <#else>
        this.appendValueInput('${param.name}')
-           .appendField(' - ${param.name}');
+           .appendField('  ${param.name}').setAlign(Blockly.ALIGN_RIGHT);
     </#if>    
 </#list>        
 <#if op.hasOutput()>
-   this.setOutput(true); 
+   <#if op.getOutputType()??>
+     this.setOutput(true, '${op.getOutputType()}');
+   <#else>
+     this.setOutput(true);
+   </#if> 
 <#else>
    this.setPreviousStatement(true);
    this.setNextStatement(true);  

@@ -20,6 +20,7 @@ package org.nuxeo.automation.scripting.blockly;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.ws.rs.GET;
@@ -42,6 +43,7 @@ import org.nuxeo.ecm.webengine.forms.FormData;
 import org.nuxeo.ecm.webengine.model.WebObject;
 import org.nuxeo.ecm.webengine.model.impl.ModuleRoot;
 import org.nuxeo.runtime.api.Framework;
+
 
 @Path("/automationscripting/blockly")
 @Produces("text/html;charset=UTF-8")
@@ -98,6 +100,7 @@ public class BlocklyRoot extends ModuleRoot {
                 System.out.println("Exeception on OP " + opType.getClass().getSimpleName());
             }
         }
+        Collections.sort(ids);
         return ids;        
     }
     

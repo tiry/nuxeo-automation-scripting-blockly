@@ -1,5 +1,8 @@
 package org.nuxeo.automation.scripting.blockly;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.nuxeo.ecm.automation.OperationDocumentation;
 import org.nuxeo.ecm.automation.OperationDocumentation.Param;
 import org.nuxeo.ecm.automation.OperationException;
@@ -34,6 +37,32 @@ public class BlocklyOperationWrapper {
         }
         return false;
     }
+    
+    public String getInputTypes() {
+        List<String> types = new ArrayList<>();
+        for (InvokableMethod meth : type.getMethods()) {
+            if (!meth.getInputType().equals(Void.TYPE)) {
+                if (!types.contains(meth.getInputType().getSimpleName())) {
+                    types.add(meth.getInputType().getSimpleName());
+                }
+            }
+        }
+        if (types.size()==1) {            
+            return "'" + types.get(0) + "'";
+        } else if (types.size()>1) {
+            StringBuffer sb = new StringBuffer("[");
+            for (int i = 0; i < types.size(); i++) {
+                sb.append("'" + types.get(i));
+                sb.append("'");
+                if (i < types.size()-1) {
+                    sb.append(",");
+                }                
+            }
+            sb.append("]");
+            return sb.toString();            
+        }
+        return null;
+    }    
 
     public boolean hasOutput() {
         for (InvokableMethod meth : type.getMethods()) {
@@ -43,6 +72,21 @@ public class BlocklyOperationWrapper {
         }
         return false;
     }
+
+    public String getOutputType() {
+        List<String> types = new ArrayList<>();
+        for (InvokableMethod meth : type.getMethods()) {
+            if (!meth.getOutputType().equals(Void.TYPE) ) {
+                if (!types.contains(meth.getOutputType().getSimpleName())) {
+                    types.add(meth.getOutputType().getSimpleName());
+                }
+            }
+        }
+        if (types.size()==1) {
+            return types.get(0);
+        }
+        return null;
+    }    
 
     public String getId() {
         return type.getId();
