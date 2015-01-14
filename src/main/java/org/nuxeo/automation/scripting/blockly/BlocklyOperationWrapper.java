@@ -8,6 +8,7 @@ import org.nuxeo.ecm.automation.OperationDocumentation.Param;
 import org.nuxeo.ecm.automation.OperationException;
 import org.nuxeo.ecm.automation.OperationType;
 import org.nuxeo.ecm.automation.core.impl.InvokableMethod;
+import org.nuxeo.ecm.core.api.DocumentModelList;
 
 public class BlocklyOperationWrapper {
 
@@ -78,7 +79,7 @@ public class BlocklyOperationWrapper {
         for (InvokableMethod meth : type.getMethods()) {
             if (!meth.getOutputType().equals(Void.TYPE) ) {
                 if (!types.contains(meth.getOutputType().getSimpleName())) {
-                    types.add(meth.getOutputType().getSimpleName());
+                    types.add(getOutputTypeMapping(meth.getOutputType().getSimpleName()));
                 }
             }
         }
@@ -88,6 +89,13 @@ public class BlocklyOperationWrapper {
         return null;
     }    
 
+    protected String getOutputTypeMapping(String type) {
+        if (DocumentModelList.class.getSimpleName().equals(type)) {
+            return "Array";
+        }
+        return type;
+    }
+    
     public String getId() {
         return type.getId();
     }
