@@ -79,10 +79,40 @@
       <artifactId>nuxeo-platform-login-default</artifactId>
       <scope>test</scope>
     </dependency>
+
+
+    <dependency>
+     <groupId>dummy</groupId>
+     <artifactId>rt</artifactId>
+     <version>1</version>
+     <scope>system</scope>
+     <systemPath>${java.home}/lib/rt.jar</systemPath>
+    </dependency>
+    <dependency>
+     <groupId>dummy</groupId>
+     <artifactId>rhino</artifactId>
+     <version>1</version>
+     <scope>system</scope>
+     <systemPath>${java.home}/lib/rhino.jar</systemPath>
+    </dependency>
+
   </dependencies>
 
   <build>
     <plugins>
+     <plugin>
+      <artifactId>maven-compiler-plugin</artifactId>
+       <configuration>
+        <source>1.7</source>
+        <target>1.7</target>
+        <compilerArguments>
+          <verbose />
+          <!--<bootclasspath>${java.home}/lib/rt.jar,${java.home}/lib/rhino.jar</bootclasspath>-->
+          <!--<bootclasspath>${java.home}/lib/rt.jar</bootclasspath>-->
+          <!--<bootclasspath>${java.home}/lib/rhino.jar</bootclasspath>-->
+        </compilerArguments>
+       </configuration>
+     </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
