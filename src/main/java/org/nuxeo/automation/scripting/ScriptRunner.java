@@ -27,13 +27,13 @@ public class ScriptRunner {
 
     public ScriptRunner(ScriptEngineManager engineManager, String jsBinding) {
         this.engineManager = engineManager;
-        engine = engineManager.getEngineByName("javascript");
+        engine = engineManager.getEngineByName("Nashorn");
         this.jsBinding = jsBinding;
     }
 
     public ScriptRunner(ScriptEngineManager engineManager, CompiledScript jsBinding) {
         this.engineManager = engineManager;
-        engine = engineManager.getEngineByName("javascript");
+        engine = engineManager.getEngineByName("Nashorn");
         this.compiledJSWrapper = jsBinding;
     }
 

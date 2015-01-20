@@ -4,7 +4,6 @@ var root = Document.Fetch(null, {
 
 var newDocs = [];
 for (var i = 1; i < 10; i++) {
-
     var newDoc = Document.Create(root, {
         "type": "File",
         "name": "newDoc" + i,
@@ -35,4 +34,4 @@ var evenDocs = Document.Query(null, {
     "query": "select * from Document where dc:nature='even'"
 });
 
-println("Created " + evenDocs.size() + " even Documents");
+print("Created " + evenDocs.size() + " even Documents");

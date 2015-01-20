@@ -1,9 +1,9 @@
 package org.nuxeo.automation.scripting.operation;
 
-import org.nuxeo.automation.scripting.ScriptableMap;
+import java.util.Map;
 
 public interface ScriptingOperationInterface {
 
-    Object run(ScriptableMap ctx, Object input, ScriptableMap parameters);
+    Object run(Map<String, Object> ctx, Object input, Map<String, Object> parameters);
 
 }

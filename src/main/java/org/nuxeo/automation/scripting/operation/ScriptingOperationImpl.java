@@ -1,24 +1,21 @@
 package org.nuxeo.automation.scripting.operation;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.script.ScriptException;
 
+import jdk.nashorn.api.scripting.ScriptObjectMirror;
+
 import org.nuxeo.automation.scripting.AutomationScriptingService;
+import org.nuxeo.automation.scripting.MarshalingHelper;
 import org.nuxeo.automation.scripting.ScriptRunner;
-import org.nuxeo.automation.scripting.ScriptableMap;
 import org.nuxeo.ecm.automation.OperationContext;
 import org.nuxeo.ecm.automation.OperationException;
 import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.DocumentModelList;
 import org.nuxeo.ecm.core.api.impl.DocumentModelListImpl;
 import org.nuxeo.runtime.api.Framework;
-
-import sun.org.mozilla.javascript.NativeArray;
-import sun.org.mozilla.javascript.NativeObject;
 
 public class ScriptingOperationImpl {
 
@@ -42,7 +39,7 @@ public class ScriptingOperationImpl {
     public Object run(Object input) throws Exception {
         try {
             ScriptingOperationInterface itf = runner.getInterface(ScriptingOperationInterface.class, source);
-            return wrapResult(itf.run(wrap(ctx), input, wrap(args)));
+            return wrapResult(itf.run(ctx.getVars(), input, args));
         } catch (ScriptException e) {
             throw new OperationException(e);
         }
@@ -53,42 +50,27 @@ public class ScriptingOperationImpl {
         if (res == null) {
             return null;
         }
-        if (res instanceof NativeArray) {
-            NativeArray na = (NativeArray) res;
-            Object[] array = na.toArray();
-            if (array.length == 0) {
-                return new ArrayList<>();
-            } else {
-                List<Object> wraped = new ArrayList<>();
+        if (res instanceof ScriptObjectMirror) {
+            Object unwrapped =  MarshalingHelper.unwrap((ScriptObjectMirror)res);
+            
+            if (unwrapped instanceof List<?>) {
                 DocumentModelList docs = new DocumentModelListImpl();
-                for (int i = 0; i < array.length; i++) {
-                    Object val = na.get(i);
-                    if (val instanceof DocumentModel) {
-                        docs.add((DocumentModel) val);
+                List<?> l = (List<?>) unwrapped;
+                for (Object item : l) {
+                    if (item instanceof DocumentModel) {
+                        docs.add((DocumentModel)item);
                     }
-                    wraped.add(wrapResult(val));
                 }
-                if (docs.size() == wraped.size()) {
+                if (docs.size()==l.size() && docs.size()>0) {
                     return docs;
-                } else {
-                    return wraped;
-                }
-            }
-
-        } else if (res instanceof NativeObject) {
-            NativeObject no = (NativeObject) res;
-            Map<Object, Object> wraped = new HashMap<Object, Object>();
-
-            for (Object key : no.keySet()) {
-                wraped.put(key, wrapResult(no.get(key)));
-            }
-            return wraped;
-
-        } else {
-            return res;
+                }            
+            }            
+            return unwrapped;
         }
+        return res;
+        
     }
-
+/*
     protected ScriptableMap wrap(OperationContext ctx) {
         return wrap(ctx.getVars());
     }
@@ -108,5 +90,5 @@ public class ScriptingOperationImpl {
         }
         return no;
     }
-
+*/
 }

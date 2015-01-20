@@ -32,7 +32,7 @@ public class AutomationScriptingComponent extends DefaultComponent implements Au
 
     protected CompiledScript compiledJSWrapper = null;
 
-    protected static final boolean preCompile = true;
+    protected static final boolean preCompile = false;
 
     public static final String EP_OP = "operation";
 
@@ -41,7 +41,7 @@ public class AutomationScriptingComponent extends DefaultComponent implements Au
         super.activate(context);
         engineManager = new ScriptEngineManager();
         if (preCompile) {
-            compiler = (Compilable) engineManager.getEngineByName("javascript");
+            compiler = (Compilable) engineManager.getEngineByName("Nashorn");
         }
     }
 

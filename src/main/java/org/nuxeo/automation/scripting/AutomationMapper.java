@@ -1,10 +1,10 @@
 package org.nuxeo.automation.scripting;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+
+import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 import org.nuxeo.ecm.automation.AutomationService;
 import org.nuxeo.ecm.automation.OperationContext;
@@ -16,9 +16,6 @@ import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.DocumentRef;
 import org.nuxeo.runtime.api.Framework;
 
-import sun.org.mozilla.javascript.NativeArray;
-import sun.org.mozilla.javascript.NativeObject;
-
 public class AutomationMapper {
 
     protected final CoreSession session;
@@ -27,14 +24,37 @@ public class AutomationMapper {
         this.session = session;
     }
 
-    public Object executeOperation(String opId, Object input, NativeObject parameters) throws Exception {
+    public Object executeOperation(String opId, Object input, ScriptObjectMirror parameters) throws Exception {
         AutomationService as = Framework.getService(AutomationService.class);
         OperationContext ctx = new OperationContext(session);
         populateContext(ctx, input);
         Map<String, Object> params = unwrapParameters(parameters);
         return as.run(ctx, opId, params);
     }
+    
+    protected Map<String, Object> unwrapParameters(ScriptObjectMirror parameters) {
+        Map<String, Object> params = new HashMap<String, Object>();
+        for (String k : parameters.keySet()) {
+            Object value = parameters.get(k);
+            if (value instanceof ScriptObjectMirror) {                
+                ScriptObjectMirror jso = (ScriptObjectMirror) value;                
+                if (jso.isArray()) {
+                    params.put( k, MarshalingHelper.unwrap(jso));
+                } else {
+                    params.put( k, extractProperties(jso));    
+                }                                
+            } else {
+                if (value != null) {
+                    params.put((String) k, value.toString());
+                } else {
+                    params.put((String) k, null);
+                }
+            }
+        }
+        return params;
+    }
 
+    
     protected void populateContext(OperationContext ctx, Object input) {
 
         if (input instanceof String) {
@@ -45,11 +65,11 @@ public class AutomationMapper {
             ctx.setInput((DocumentRef) input);
         } else if (input instanceof Blob) {
             ctx.setInput((Blob) input);
-        } else if (input instanceof NativeObject) {
-            ctx.setInput(extractProperties((NativeObject) input));
+        } else if (input instanceof ScriptObjectMirror) {
+            ctx.setInput(extractProperties((ScriptObjectMirror) input));
         }
     }
-
+/*
     protected Map<String, Object> unwrapParameters(NativeObject parameters) {
         Map<String, Object> params = new HashMap<String, Object>();
         for (Object k : parameters.keySet()) {
@@ -68,17 +88,17 @@ public class AutomationMapper {
         }
         return params;
     }
-
-    protected Properties extractProperties(NativeObject parameters) {
+*/
+    protected Properties extractProperties(ScriptObjectMirror parameters) {
         DataModelProperties props = new DataModelProperties();
-        Map<String, Object> data = extractMap(parameters);
+        Map<String, Object> data = MarshalingHelper.unwrapMap(parameters);
         for (String k : data.keySet()) {
             props.getMap().put(k, (Serializable) data.get(k));
         }
         // props.getMap().putAll((Map<? extends String, ? extends Serializable>) data);
         return props;
     }
-
+/*
     protected Map<String, Object> extractMap(NativeObject parameters) {
         Map<String, Object> params = new HashMap<String, Object>();
         for (Object k : parameters.keySet()) {
@@ -112,4 +132,5 @@ public class AutomationMapper {
         }
         return result;
     }
+    */
 }
