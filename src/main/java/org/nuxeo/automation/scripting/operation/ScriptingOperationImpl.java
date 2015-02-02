@@ -70,25 +70,4 @@ public class ScriptingOperationImpl {
         return res;
         
     }
-/*
-    protected ScriptableMap wrap(OperationContext ctx) {
-        return wrap(ctx.getVars());
-    }
-
-    protected ScriptableMap wrap(Map<String, Object> vars) {
-        return new ScriptableMap(vars);
-    }
-
-    protected NativeObject wrap2(OperationContext ctx) {
-        return wrap2(ctx.getVars());
-    }
-
-    protected NativeObject wrap2(Map<String, Object> vars) {
-        NativeObject no = new NativeObject();
-        for (String k : vars.keySet()) {
-            no.defineProperty(k, vars.get(k), NativeObject.READONLY);
-        }
-        return no;
-    }
-*/
 }
