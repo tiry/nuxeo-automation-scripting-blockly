@@ -2,7 +2,7 @@
 
 This module was initially started as a prototype for building an JavaScript based Automation DSL.
 
-The main code has now be moved to the main Nuxeo branch :
+The main code has now be moved to the main Nuxeo branch in [nuxeo-automation-scripting](https://github.com/nuxeo/nuxeo/tree/master/nuxeo-features/nuxeo-automation/nuxeo-automation-scripting)
 
 Only the blockly integration remains in this module.
 
@@ -32,7 +32,7 @@ This Blockly integration is a tentative to find a solution somewhere in the midd
 
 Here is a blockly sample :
 
-<img src="doc/BlocklyBlocks.png/>
+<img src="doc/BlocklyBlocks.png"/>
 
 And here is the generated JavaScript Automation DSL :
 
