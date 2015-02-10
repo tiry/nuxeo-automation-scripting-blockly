@@ -1,2 +1,0 @@
-print(mapper.callMe({'p1': 1, 'p2' : 'str'}));
-print("done");

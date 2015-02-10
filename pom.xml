@@ -5,17 +5,21 @@
   <parent>
     <groupId>org.nuxeo.ecm.platform</groupId>
     <artifactId>nuxeo-features-parent</artifactId>
-    <version>6.0</version>
+    <version>7.2-SNAPSHOT</version>
   </parent>
 
   <groupId>org.nuxeo.addons</groupId>
-  <artifactId>nuxeo-automation-scripting</artifactId>
-  <name>nuxeo-automation-scripting</name>
-  <version>6.0-SNAPSHOT</version>
+  <artifactId>nuxeo-automation-scripting-blockly</artifactId>
+  <name>nuxeo-automation-scripting-blockly</name>
+  <version>7.2-SNAPSHOT</version>
   <description>
 
   </description>
   <dependencies>
+    <dependency>
+      <groupId>org.nuxeo.ecm.automation</groupId>
+      <artifactId>nuxeo-automation-scripting</artifactId>
+      <version>7.2-SNAPSHOT</version></dependency>
     <dependency>
       <groupId>org.nuxeo.common</groupId>
       <artifactId>nuxeo-common</artifactId>
@@ -61,25 +65,6 @@
         <artifactId>servlet-api</artifactId>
         <scope>provided</scope>
     </dependency>
-
-
-
-    <dependency>
-      <groupId>org.nuxeo.ecm.platform</groupId>
-      <artifactId>nuxeo-platform-test</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.nuxeo.ecm.platform</groupId>
-      <artifactId>nuxeo-platform-login</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.nuxeo.ecm.platform</groupId>
-      <artifactId>nuxeo-platform-login-default</artifactId>
-      <scope>test</scope>
-    </dependency>
-
 
   </dependencies>
 

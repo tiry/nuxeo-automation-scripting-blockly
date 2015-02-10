@@ -2,8 +2,8 @@ Manifest-Version: 1.0
 Bundle-Vendor: Nuxeo
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .
-Bundle-Name: org.nuxeo.ecm.automation.scripting.tests
+Bundle-Name: org.nuxeo.ecm.automation.scripting.blockly.tests
 Bundle-ManifestVersion: 2
-Bundle-SymbolicName: org.nuxeo.ecm.automation.scripting.tests
+Bundle-SymbolicName: org.nuxeo.ecm.automation.scripting.blockly.tests
 
 
