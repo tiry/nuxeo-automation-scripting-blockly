@@ -14,13 +14,12 @@
  * Contributors:
  *     dmetzler
  */
-       
+
 package org.nuxeo.automation.scripting.blockly;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import javax.ws.rs.GET;
@@ -40,19 +39,27 @@ import org.nuxeo.ecm.core.api.Blob;
 import org.nuxeo.ecm.core.api.impl.blob.StringBlob;
 import org.nuxeo.ecm.platform.web.common.ServletHelper;
 import org.nuxeo.ecm.webengine.forms.FormData;
+import org.nuxeo.ecm.webengine.model.Resource;
+import org.nuxeo.ecm.webengine.model.ResourceType;
+import org.nuxeo.ecm.webengine.model.WebContext;
 import org.nuxeo.ecm.webengine.model.WebObject;
 import org.nuxeo.ecm.webengine.model.impl.ModuleRoot;
 import org.nuxeo.runtime.api.Framework;
-
 
 @Path("/automationscripting/blockly")
 @Produces("text/html;charset=UTF-8")
 @WebObject(type = "Blockly")
 public class BlocklyRoot extends ModuleRoot {
 
+    protected AutomationHelper helper = new AutomationHelper();
+
+    protected String getFilter() {
+        return getContext().getRequest().getParameter("filter");
+    }
+
     @GET
     @Path("/")
-    @Produces({ MediaType.TEXT_HTML})           
+    @Produces({ MediaType.TEXT_HTML})
     public Object getEditor(@QueryParam("sample") String sample) throws IOException {;
         if (sample!=null && sample.endsWith(".xml")) {
             InputStream is = this.getClass().getResourceAsStream("/" + sample);
@@ -66,50 +73,25 @@ public class BlocklyRoot extends ModuleRoot {
 
     @GET
     @Path("/blocklyFrame")
-    @Produces({ MediaType.TEXT_HTML})           
+    @Produces({ MediaType.TEXT_HTML})
     public Object getBlocklyFrame() {
         return getView("blocklyFrame");
-    }    
-    
-    public List<String> getCategories() throws OperationException {
-        List<String> categories = new ArrayList<>();
-        AutomationService as = Framework.getService(AutomationService.class);
-        
-        for (OperationType opType : as.getOperations()) {
-            try {
-                if (!categories.contains(opType.getDocumentation().getCategory())) {
-                    categories.add(opType.getDocumentation().getCategory());
-                }
-            } catch (OperationException e) {
-                System.out.println("Exeception on OP " + opType.getClass().getSimpleName());
-            }
-        }
-        return categories;
     }
-    
+
+    public List<String> getCategories() {
+        return helper.getCategories(getFilter());
+    }
+
     public List<String> getOperationIdsForCategory(String cat)  {
-        List<String> ids = new ArrayList<>();
-        AutomationService as = Framework.getService(AutomationService.class);
-        
-        for (OperationType opType : as.getOperations()) {
-            try {
-                if (cat.equals(opType.getDocumentation().getCategory())) {
-                    ids.add(opType.getId());
-                }
-            } catch (OperationException e) {
-                System.out.println("Exeception on OP " + opType.getClass().getSimpleName());
-            }
-        }
-        Collections.sort(ids);
-        return ids;        
+        return helper.getOperationIdsForCategory(cat, getFilter());
     }
-    
+
     @GET
     @Path("/blocks")
-    @Produces({ "text/javascript"})           
+    @Produces({ "text/javascript"})
     public Object getBlocks() {
         AutomationService as = Framework.getService(AutomationService.class);
-        
+
         List<BlocklyOperationWrapper> ops = new ArrayList<>();
         for (OperationType opType : as.getOperations()) {
             try {
@@ -118,16 +100,23 @@ public class BlocklyRoot extends ModuleRoot {
             } catch (OperationException e) {
                 System.out.println("Exeception on OP " + opType.getClass().getSimpleName());
             }
-        }        
+        }
         return getView("automationBlocks").arg("operations", ops);
     }
-    
+
+    @GET
+    @Path("/toolbox")
+    @Produces({ "text/xml"})
+    public Object getToolbox() {
+        return getView("toolbox");
+    }
+
     @POST
-    @Path("/save")    
-    public Response save() {        
-        FormData form = getContext().getForm();        
+    @Path("/save")
+    public Response save() {
+        FormData form = getContext().getForm();
         String xmlFileName = form.getString("xmlFileName");
-        String xml = form.getString("xml");        
+        String xml = form.getString("xml");
         String contentDisposition = ServletHelper.getRFC2231ContentDisposition(
                 ctx.getRequest(), xmlFileName);
         Blob blob = new StringBlob(xml);
@@ -137,21 +126,21 @@ public class BlocklyRoot extends ModuleRoot {
         return builder.build();
     }
 
-    
+
     @POST
-    @Path("/")    
-    public Object load() throws IOException {        
+    @Path("/")
+    public Object load() throws IOException {
         FormData form = getContext().getForm();
-        Blob blob = form.getBlob("xmlFile");        
+        Blob blob = form.getBlob("xmlFile");
         return getView("editor").arg("xml",blob.getString());
     }
 
-    @POST        
-    @Path("/downloadJS")    
-    public Response downloadJS() {        
-        FormData form = getContext().getForm();        
+    @POST
+    @Path("/downloadJS")
+    public Response downloadJS() {
+        FormData form = getContext().getForm();
         String jsFileName = form.getString("jsFileName");
-        String js = form.getString("js");        
+        String js = form.getString("js");
         String contentDisposition = ServletHelper.getRFC2231ContentDisposition(
                 ctx.getRequest(), jsFileName);
         Blob blob = new StringBlob(js);
@@ -161,6 +150,6 @@ public class BlocklyRoot extends ModuleRoot {
         return builder.build();
     }
 
-    
-    
+
+
 }

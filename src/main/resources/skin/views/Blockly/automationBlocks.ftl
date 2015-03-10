@@ -11,27 +11,27 @@ Blockly.Blocks['Automation.SwallowOutput'] = {
     this.appendValueInput('INPUT')
            .appendField(' << ');
    this.setPreviousStatement(true);
-   this.setNextStatement(true);  
+   this.setNextStatement(true);
  }
 };
 
 Blockly.JavaScript['Automation.SwallowOutput'] = function (block) {
-  var code = Blockly.JavaScript.valueToCode(block, 'INPUT', Blockly.JavaScript.ORDER_ASSIGNMENT);  
+  var code = Blockly.JavaScript.valueToCode(block, 'INPUT', Blockly.JavaScript.ORDER_ASSIGNMENT);
   if (code!=null && code!='') {
     code = code + ";\n";
-  }      
+  }
   return code;
 };
- 
-// GetDocumentproperty  
+
+// GetDocumentproperty
 Blockly.Blocks['Automation.GetDocumentProperty'] = {
   init: function() {
     this.setColour(220);
     this.appendDummyInput()
-      .appendField('expression')
+      .appendField('GetDocumentProperty')
       .appendField(new Blockly.FieldTextInput('dc:title'), 'EXPR');
    this.appendValueInput('INPUT')
-   this.setOutput(true); 
+   this.setOutput(true);
  }
 };
 
@@ -40,35 +40,56 @@ Blockly.JavaScript['Automation.GetDocumentProperty'] = function (block) {
   var suffix = ".";
   var code = Blockly.JavaScript.valueToCode(block, 'INPUT', Blockly.JavaScript.ORDER_MEMBER);
   if (expr == 'lifeCycle') {
-     suffix += "getCurrentLifeCycle()";     
+     suffix += "getCurrentLifeCycle()";
   } else if (expr == 'name') {
-     suffix += "getName()";     
+     suffix += "getName()";
   } else if (expr == 'type') {
-     suffix += "getType()";     
+     suffix += "getType()";
   } else {
      suffix += "getPropertyValue('" + expr + "')";
-  } 
+  }
   return [code + suffix,  Blockly.JavaScript.ORDER_NONE];
 };
+
+
+
+
+// GetDocumentproperty
+Blockly.Blocks['Automation.JSExpression'] = {
+  init: function() {
+    this.setColour(220);
+    this.appendDummyInput()
+      .appendField('JavaScript Expression')
+      .appendField(new Blockly.FieldTextInput('[]'), 'EXPR');
+   this.appendValueInput('INPUT')
+   this.setOutput(true);
+ }
+};
+
+Blockly.JavaScript['Automation.JSExpression'] = function (block) {
+  var expr = block.getFieldValue('EXPR');
+  return [expr,  Blockly.JavaScript.ORDER_NONE];
+};
+
 
 <#list operations as op>
 
 Blockly.Blocks['${op.id}'] = {
-  
+
   init: function() {
     //this.setHelpUrl(Blockly.Msg.CONTROLS_REPEAT_HELPURL);
     this.setColour(220);
     this.appendDummyInput()
         .appendField("${op.id}")
-    
+
 <#if op.hasInput()>
    var inputField = this.appendValueInput('INPUT')
         .appendField('  Input').setAlign(Blockly.ALIGN_RIGHT);
    <#if op.getInputTypes()??>
-     	inputField.setCheck(${op.getInputTypes()});
+       inputField.setCheck(${op.getInputTypes()});
    </#if>
-</#if>        
-<#list op.params as param>    
+</#if>
+<#list op.params as param>
     <#if param.getType()=="boolean">
        this.appendDummyInput().appendField('  ${param.name}').appendField(new Blockly.FieldCheckbox('FALSE'), '${param.name}').setAlign(Blockly.ALIGN_RIGHT);
     <#elseif param.getType()=="integer">
@@ -77,19 +98,19 @@ Blockly.Blocks['${op.id}'] = {
     <#else>
        this.appendValueInput('${param.name}')
            .appendField('  ${param.name}').setAlign(Blockly.ALIGN_RIGHT);
-    </#if>    
-</#list>        
+    </#if>
+</#list>
 <#if op.hasOutput()>
    <#if op.getOutputType()??>
      this.setOutput(true, '${op.getOutputType()}');
    <#else>
      this.setOutput(true);
-   </#if> 
+   </#if>
 <#else>
    this.setPreviousStatement(true);
-   this.setNextStatement(true);  
-</#if>        
-    this.setInputsInline(false);  
+   this.setNextStatement(true);
+</#if>
+    this.setInputsInline(false);
     this.setTooltip("${op.label}");
   }
 };
@@ -103,23 +124,23 @@ Blockly.JavaScript['${op.id}'] = function(block) {
       code += 'null';
   </#if>
   code +=', {'
-<#list op.params as param>    
+<#list op.params as param>
     <#if param.getType()=="boolean">
        code += '"${param.name}":' + block.getFieldValue('${param.name}');
        code +=",";
     <#else>
        var pVal = Blockly.JavaScript.valueToCode(block,'${param.name}',Blockly.JavaScript.ORDER_MEMBER);
-       if (typeof pVal != 'undefined' && !pVal=='') {                
-       	code += '"${param.name}":' + pVal;
-       	code +=",";
+       if (typeof pVal != 'undefined' && !pVal=='') {
+         code += '"${param.name}":' + pVal;
+         code +=",";
        }
-    </#if>    
-    
+    </#if>
+
 </#list>
   if (code.lastIndexOf(",")==code.length-1) {
     code = code.substring(0, code.length-1);
-  }          
-  code += '})'  
+  }
+  code += '})'
 
   return [code,  Blockly.JavaScript.ORDER_NONE];
 }
