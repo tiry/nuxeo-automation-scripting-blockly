@@ -1,0 +1,115 @@
+<chains>
+    <chain id="AddAMapEntryToTheDataCollection">
+      <operation id="Context.FetchDocument"/>
+      <operation id="Context.SetVar">
+        <param type="string" name="name">dataCollectionLine</param>
+        <param type="object" name="value">expr:new java.util.HashMap()</param>
+      </operation>
+      <operation id="LogOperation">
+        <param type="string" name="level">debug</param>
+        <param type="string" name="message">afterDataCollectionLine instanciation</param>
+      </operation>
+      <operation id="Context.RunOperation">
+        <param type="string" name="id">FetchAndSetDataFromConnectProject</param>
+        <param type="boolean" name="isolate">false</param>
+      </operation>
+      <operation id="LogOperation">
+        <param type="string" name="level">debug</param>
+        <param type="string" name="message">afterFetchAndSetDataFromConnectProject</param>
+      </operation>
+      <operation id="Context.RunOperation">
+        <param type="string" name="id">FetchAndSetDataFromStudioProject</param>
+        <param type="boolean" name="isolate">false</param>
+      </operation>
+      <operation id="Context.RunOperation">
+        <param type="string" name="id">FetchAndSetDataFromConnectClient</param>
+        <param type="boolean" name="isolate">false</param>
+      </operation>
+      <operation id="Context.RunScript">
+        <param type="string" name="script">dataCollection.add(dataCollectionLine);</param>
+      </operation>
+    </chain>
+    <chain id="ExportDataChain">
+      <operation id="Context.FetchDocument"/>
+      <operation id="Document.Push"/>
+      <operation id="Context.SetVar">
+        <param type="string" name="name">dataCollection</param>
+        <param type="object" name="value">expr:new java.util.ArrayList()</param>
+      </operation>
+      <operation id="Document.Query">
+        <param type="string" name="query">SELECT * FROM Document where ecm:primaryType ="ConnectProject"</param>
+        <param type="string" name="language">NXQL</param>
+      </operation>
+      <operation id="Context.RunDocumentOperation">
+        <param type="string" name="id">AddAMapEntryToTheDataCollection</param>
+        <param type="boolean" name="isolate">false</param>
+      </operation>
+      <operation id="Document.Pop"/>
+      <operation id="Render.Document">
+        <param type="string" name="template">template:DataExport</param>
+        <param type="string" name="filename">expr:ConnectData-@{CurrentDate.format("yyyyy.MMMMM.dd GGG hh:mm aaa")}.csv</param>
+        <param type="string" name="mimetype">text/csv</param>
+        <param type="string" name="type">ftl</param>
+      </operation>
+      <operation id="Context.SetInputAsVar">
+        <param type="string" name="name">statsFile</param>
+      </operation>
+      <operation id="Document.Fetch">
+        <param type="document" name="value">expr:Env["dataExport.document.path"]</param>
+      </operation>
+      <operation id="Blob.Set">
+        <param type="blob" name="file">expr:statsFile</param>
+        <param type="boolean" name="save">true</param>
+        <param type="string" name="xpath">file:content</param>
+      </operation>
+    </chain>
+    <chain id="FetchAndSetDataFromConnectClient">
+      <operation id="Context.FetchDocument"/>
+      <operation id="Document.GetParent">
+        <param type="string" name="type">ConnectClient</param>
+      </operation>
+      <operation id="Context.RunScript">
+        <param type="string" name="script">dataCollectionLine.put("connectClientId",Document.id);
+dataCollectionLine.put("connectClientTitle",Document.title);
+dataCollectionLine.put("connectClientShortName",Document["connectclient:shortName"]);
+dataCollectionLine.put("connectClientNuxeoRegion",Document["connectclient:nuxeoRegion"]);
+dataCollectionLine.put("connectClientRegistrationIp",Document["connectclient:registrationIp"]);
+dataCollectionLine.put("connectClientSalesForceId",Document["connectclient:salesForceId"]);</param>
+      </operation>
+    </chain>
+    <chain id="FetchAndSetDataFromConnectProject">
+      <operation id="Context.RunScript">
+        <param type="string" name="script">dataCollectionLine.put("connectProjectId",Document.id);
+dataCollectionLine.put("connectProjectTitle",Document.title);
+dataCollectionLine.put("connectProjectTargetNuxeo",Document["connectproject:targetNuxeo"]);
+dataCollectionLine.put("connectProjectTargetOS",Document["connectproject:targetOS"]);
+dataCollectionLine.put("connectProjectTargetStorage",Document["connectproject:Storage"]);</param>
+      </operation>
+    </chain>
+    <chain id="FetchAndSetDataFromStudioProject">
+      <operation id="Document.FetchByProperty">
+        <param type="string" name="property">sp:projectId</param>
+        <param type="stringlist" name="values">expr:Document.id</param>
+      </operation>
+      <operation id="Context.RunDocumentOperation">
+        <param type="string" name="id">expr:This.size()&gt;0?"SetDataFromStudioProject":"ConnectVoid"</param>
+        <param type="boolean" name="isolate">false</param>
+      </operation>
+    </chain>
+    <chain id="FireEventForExport">
+      <operation id="Context.FetchDocument"/>
+      <operation id="Notification.SendEvent">
+        <param type="string" name="name">ExportStats</param>
+      </operation>
+    </chain>
+    <chain id="SetDataFromStudioProject">
+      <operation id="Context.RunScript">
+        <param type="string" name="script">dataCollectionLine.put("studioProjectTargetVersion",Document["sp:targetVersion"]);
+dataCollectionLine.put("studioProjectCollabEnabled",Document["sp:collabEnabled"]);
+dataCollectionLine.put("studioProjectTrial",Document["sp:trial"]);
+dataCollectionLine.put("studioProjectContractId",Document["sp:contractId"]);
+dataCollectionLine.put("studioProjectContributors",Document["sp:contributors"]);
+dataCollectionLine.put("studioProjectName",Document.name);</param>
+      </operation>
+    </chain>
+</chains>

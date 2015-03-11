@@ -22,6 +22,13 @@ public class BlocklyOperationWrapper {
 
     protected final Param[] params;
 
+    public BlocklyOperationWrapper() {
+        this.category="";
+        this.type=null;
+        this.params = null;
+        this.label="";
+        this.doc=null;
+    }
     public BlocklyOperationWrapper(OperationType type) throws OperationException {
         this.type = type;
         doc = type.getDocumentation();
@@ -31,6 +38,9 @@ public class BlocklyOperationWrapper {
     }
 
     public boolean hasInput() {
+        if (type==null) {
+            return false;
+        }
         for (InvokableMethod meth : type.getMethods()) {
             if (!meth.getInputType().equals(Void.TYPE)) {
                 return true;
@@ -38,7 +48,7 @@ public class BlocklyOperationWrapper {
         }
         return false;
     }
-    
+
     public String getInputTypes() {
         List<String> types = new ArrayList<>();
         for (InvokableMethod meth : type.getMethods()) {
@@ -48,7 +58,7 @@ public class BlocklyOperationWrapper {
                 }
             }
         }
-        if (types.size()==1) {            
+        if (types.size()==1) {
             return "'" + types.get(0) + "'";
         } else if (types.size()>1) {
             StringBuffer sb = new StringBuffer("[");
@@ -57,15 +67,18 @@ public class BlocklyOperationWrapper {
                 sb.append("'");
                 if (i < types.size()-1) {
                     sb.append(",");
-                }                
+                }
             }
             sb.append("]");
-            return sb.toString();            
+            return sb.toString();
         }
         return null;
-    }    
+    }
 
     public boolean hasOutput() {
+        if (type==null) {
+            return false;
+        }
         for (InvokableMethod meth : type.getMethods()) {
             if (!meth.getOutputType().equals(Void.TYPE)) {
                 return true;
@@ -87,7 +100,7 @@ public class BlocklyOperationWrapper {
             return types.get(0);
         }
         return null;
-    }    
+    }
 
     protected String getOutputTypeMapping(String type) {
         if (DocumentModelList.class.getSimpleName().equals(type)) {
@@ -95,7 +108,7 @@ public class BlocklyOperationWrapper {
         }
         return type;
     }
-    
+
     public String getId() {
         return type.getId();
     }

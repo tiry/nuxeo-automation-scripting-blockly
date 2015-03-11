@@ -55,6 +55,13 @@
   Blockly.addChangeListener(myUpdateFunction);
   }
 
+  function xml2Blockly() {
+    var xmlToLoad = jQuery(jQuery("#xmlGen")[0]).val();
+    console.log(xmlToLoad);
+    var xml = Blockly.Xml.textToDom(xmlToLoad);
+    Blockly.Xml.domToWorkspace(Blockly.mainWorkspace, xml);
+  }
+
   function switchTab(tab) {
     jQuery(".nav-tabs>li").removeClass("active");
     jQuery(tab).addClass("active");
@@ -135,6 +142,18 @@
       <textarea class="language-xml" id="xmlGen" cols="120" rows="30"></textarea>
     </td>
     <td style="padding:10px">
+
+
+
+
+           <div class="panel panel-default">
+              <div class="panel-heading">
+                XML to Blocks
+              </div>
+              <div class="panel-body">
+                <button type="submit" class="btn btn-lg btn-primary" onclick="xml2Blockly()">Load XML Content</button>
+              </div>
+            </div>
 
       <form action="${Root.path}/" method="POST" enctype="multipart/form-data" >
             <div class="panel panel-default">
