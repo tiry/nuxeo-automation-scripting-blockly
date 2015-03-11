@@ -40,7 +40,7 @@ public class TestConversion {
     @Test
     public void testConvert() throws Exception{
 
-        InputStream xmlStream = this.getClass().getResourceAsStream("/chains2.xml");
+        InputStream xmlStream = this.getClass().getResourceAsStream("/chains.xml");
         Assert.assertNotNull(xmlStream);
 
         Chains2Blockly converter = new Chains2Blockly();

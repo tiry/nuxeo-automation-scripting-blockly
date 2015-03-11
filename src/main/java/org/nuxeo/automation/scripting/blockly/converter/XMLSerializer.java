@@ -108,6 +108,9 @@ public class XMLSerializer {
     }
 
     public static Element pipeBlock(Element first, Element second) {
+        if (first.element(nextTag)!=null) {
+            throw new UnsupportedOperationException("Can only have one child!!!");
+        }
         Element next = first.addElement(nextTag);
         next.add(second);
         return first;

@@ -1,6 +1,7 @@
 package org.nuxeo.automation.scripting.blockly;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.nuxeo.ecm.automation.OperationDocumentation;
@@ -22,6 +23,8 @@ public class BlocklyOperationWrapper {
 
     protected final Param[] params;
 
+    protected static final List<String> ChainsWithInputs = Arrays.asList(new String[]{"Context.SetInputAsVar"});
+
     public BlocklyOperationWrapper() {
         this.category="";
         this.type=null;
@@ -41,6 +44,10 @@ public class BlocklyOperationWrapper {
         if (type==null) {
             return false;
         }
+        if (ChainsWithInputs.contains(type.getId())) {
+            return true;
+        }
+
         for (InvokableMethod meth : type.getMethods()) {
             if (!meth.getInputType().equals(Void.TYPE)) {
                 return true;
@@ -85,6 +92,10 @@ public class BlocklyOperationWrapper {
             }
         }
         return false;
+    }
+
+    public boolean isVoid() {
+        return !hasInput() && !hasInput();
     }
 
     public String getOutputType() {

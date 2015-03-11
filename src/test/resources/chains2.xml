@@ -11,11 +11,11 @@
         </param>
       </operation>
 
+
       <operation id="Context.SetInputAsVar">
         <param type="string" name="name">mailDocument</param>
       </operation>
 
-<!--
       <operation id="Context.RunScript">
         <param type="string" name="script">
 
@@ -41,9 +41,8 @@
 
 
       <operation id="Document.Save"/>
-       -->
     </chain>
-<!--
+
     <chain id="ProcessAttachment">
       <operation id="Context.RestoreBlobInput">
         <param type="string" name="name">attachment</param>
@@ -54,5 +53,5 @@
         <param type="string" name="xpath">files:files</param>
       </operation>
     </chain>
-     -->
+
   </chains>

@@ -19,13 +19,9 @@ package org.nuxeo.automation.scripting.blockly.converter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
-import java.io.Writer;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
@@ -33,27 +29,25 @@ import org.nuxeo.automation.scripting.blockly.BlocklyOperationWrapper;
 import org.nuxeo.common.xmap.XMap;
 import org.nuxeo.ecm.automation.AutomationService;
 import org.nuxeo.ecm.automation.OperationDocumentation.Param;
-import org.nuxeo.ecm.automation.OperationNotFoundException;
 import org.nuxeo.ecm.automation.OperationType;
 import org.nuxeo.ecm.automation.core.OperationChainContribution;
 import org.nuxeo.ecm.automation.core.OperationChainContribution.Operation;
 import org.nuxeo.runtime.api.Framework;
 
 /**
- *
  * @author <a href="mailto:tdelprat@nuxeo.com">Tiry</a>
  * @since TODO
  */
 public class Chains2Blockly {
 
-    protected static Log log =LogFactory.getLog(Chains2Blockly.class);
+    protected static Log log = LogFactory.getLog(Chains2Blockly.class);
 
     public String convertXML(InputStream xmlChains) throws IOException {
         Element root = convert(xmlChains);
         OutputFormat format = OutputFormat.createPrettyPrint();
         StringWriter out = new StringWriter();
         XMLWriter writer = new XMLWriter(out, format);
-        writer.write( root);
+        writer.write(root);
         out.flush();
         return out.getBuffer().toString();
     }
@@ -81,58 +75,104 @@ public class Chains2Blockly {
 
     protected Element getInput(OperationBlock block) {
         for (Object e : block.getBlock().elements(XMLSerializer.valueTag)) {
-            if (((Element)e).attribute("name").getValue().equals("INPUT")) {
-                return (Element)e;
+            if (((Element) e).attribute("name").getValue().equals("INPUT")) {
+                return (Element) e;
             }
         }
         return null;
     }
 
-    protected void convertChain(Element root, OperationChainContribution chain, ChainsGroup chains) {
+    protected class OpBlocks {
+
+        final Element root;
+
         OperationBlock lastProcessed = null;
-        OperationBlock topBlock = null;
-        OperationBlock lastPipe = null;
+
+        OperationBlock lastResult = null;
+
+        OperationBlock lastStacked = null;
+
+        OpBlocks(Element root) {
+            this.root = root;
+        }
+    }
+
+    protected void storeOrstackBlock(OpBlocks state, OperationBlock block) {
+        if (block.getWrapper().hasOutput()) {
+            state.lastResult = block;
+        } else {
+            stackBlock(state, block);
+        }
+        state.lastProcessed = block;
+    }
+
+    protected void stackBlock(OpBlocks state, OperationBlock block) {
+        if (state.lastStacked == null) {
+            state.root.add(block.getBlock());
+        } else {
+            pipeBlocks(state.lastStacked, block);
+        }
+        state.lastStacked = block;
+    }
+
+    protected void convertChain(Element root2, OperationChainContribution chain, ChainsGroup chains) {
+
+        OpBlocks state = new OpBlocks(root2);
+
         for (Operation op : chain.getOps()) {
             if (!skipOperation(op.getId())) {
-                OperationBlock block =createOperationBlock(op);
-                if (lastProcessed!=null) {
-                    if (lastProcessed.getWrapper().hasOutput() && block.getWrapper().hasInput()) {
-                        // plug output of last block on the current one
-                        Element input = getInput(block);
-                        Element previousParent = lastProcessed.getBlock().getParent();
-                        if (previousParent!=null) {
-                            previousParent.remove(lastProcessed.getBlock());
-                            input.add(lastProcessed.getBlock());
-                            previousParent.add(block.getBlock());
+
+                OperationBlock block = createOperationBlock(op);
+
+                if (state.lastProcessed != null) {
+                    if (state.lastResult != null) {
+                        if (block.getWrapper().hasInput()) {
+                            // plug output of last block on the current one
+                            Element input = getInput(block);
+                            Element previousParent = state.lastProcessed.getBlock().getParent();
+                            // unplung if needed !?
+                            if (previousParent != null) {
+                                previousParent.remove(state.lastProcessed.getBlock());
+                                input.add(state.lastProcessed.getBlock());
+                                previousParent.add(block.getBlock());
+                            } else {
+                                input.add(state.lastProcessed.getBlock());
+                            }
+                            state.lastProcessed = block;
+                            if (block.getWrapper().hasOutput()) {
+                                state.lastResult = block;
+                            } else {
+                                state.lastResult = null;
+                                stackBlock(state, block);
+                            }
                         } else {
-                            input.add(lastProcessed.getBlock());
+                            // we have a result but no-one to read it
+                            // add swallow block
+                            OperationBlock swallowBlock = swallow(state.lastResult);
+                            // stack it
+                            stackBlock(state, swallowBlock);
+
+                            state.lastProcessed = swallowBlock;
+                            state.lastResult = null;
+                            storeOrstackBlock(state, block);
+                            state.lastProcessed = block;
                         }
                     } else {
-                        if (lastProcessed.getWrapper().hasOutput()) {
-                            // add swallow block
-                            lastProcessed = swallow(lastProcessed);
-                        }
-                        if (topBlock==null) {
-                            // add new TopBlock
-                            root.add(lastProcessed.getBlock());
-                            topBlock = lastProcessed;
-                        } else {
-                            if (lastPipe==null) {
-                                lastPipe = topBlock;
-                            }
-                            // pipe to top block
-                            pipeBlocks(lastPipe, block);
-                            lastPipe = block;
-                        }
+                        // no pending result
+                        storeOrstackBlock(state, block);
+                        state.lastProcessed = block;
                     }
                 } else {
-                    //
+                    // init round
+                    storeOrstackBlock(state, block);
+                    state.lastProcessed = block;
                 }
-                lastProcessed = block;
             }
         }
-        if (topBlock==null) {
-            root.add(lastProcessed.getBlock());
+
+        if (state.lastResult != null) {
+            OperationBlock swallowBlock = swallow(state.lastResult);
+            stackBlock(state, swallowBlock);
         }
     }
 
@@ -166,7 +206,7 @@ public class Chains2Blockly {
                         break;
                     }
                 }
-                if (parameter!=null && parameter.getValue()!=null && !parameter.getValue().isEmpty()) {
+                if (parameter != null && parameter.getValue() != null && !parameter.getValue().isEmpty()) {
                     Element e = null;
                     if (p.getType().equalsIgnoreCase("boolean")) {
                         e = XMLSerializer.createFieldElement(block, p.getName());
@@ -194,7 +234,7 @@ public class Chains2Blockly {
 
         ChainsGroup chains = new ChainsGroup();
         for (Object chain : contribs) {
-            chains.add((OperationChainContribution)chain);
+            chains.add((OperationChainContribution) chain);
         }
         return chains;
     }
