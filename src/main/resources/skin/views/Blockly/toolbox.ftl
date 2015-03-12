@@ -72,6 +72,7 @@
           <block type="Automation.SwallowOutput"></block>
           <block type="Automation.GetDocumentProperty"></block>
           <block type="Automation.JSExpression"></block>
+          <block type="Automation.TextCode"></block>
       </category>
       <#list This.getCategories() as cat>
       <category name="${cat}">

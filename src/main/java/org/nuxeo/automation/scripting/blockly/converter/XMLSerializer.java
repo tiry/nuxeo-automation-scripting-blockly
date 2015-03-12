@@ -45,10 +45,13 @@ public class XMLSerializer {
 
     public static final Namespace ns = new Namespace(XML_NAMESPACE_PREFIX, XML_NAMESPACE);
 
-
     public static final QName xmlTag = DocumentFactory.getInstance().createQName("xml", ns);
 
+    public static final QName chainTag = DocumentFactory.getInstance().createQName("chain", ns);
+
     public static final QName blockTag = DocumentFactory.getInstance().createQName("block", ns);
+
+    public static final QName placeHolderTag = DocumentFactory.getInstance().createQName("placeHolder", ns);
 
     public static final QName valueTag = DocumentFactory.getInstance().createQName("value", ns);
 
@@ -62,6 +65,12 @@ public class XMLSerializer {
         return DocumentFactory.getInstance().createElement(xmlTag);
     }
 
+    public static Element createChainElement(String name) {
+        Element e = DocumentFactory.getInstance().createElement(chainTag);
+        e.addAttribute("name", name);
+        return e;
+    }
+
     public static Element createBlock(String type) {
         Element block =  DocumentFactory.getInstance().createElement(blockTag);
 
@@ -72,11 +81,22 @@ public class XMLSerializer {
         return block;
     }
 
+    public static Element createPlaceHolder(String target, String parameters) {
+        Element block =  DocumentFactory.getInstance().createElement(placeHolderTag);
+        block.addAttribute("target", target);
+        block.addAttribute("id", counter.incrementAndGet()+"");
+        if (parameters!=null) {
+            block.addAttribute("parameters", parameters);
+        }
+        return block;
+    }
+
     public static Element createValueElement(Element e, String name) {
         Element value = e.addElement(valueTag);
         value.addAttribute("name", name);
         return value;
     }
+
 
     public static Element createFieldElement(Element e, String name) {
         Element value = e.addElement(fieldTag);
@@ -85,8 +105,8 @@ public class XMLSerializer {
     }
 
     public static Element createTextBlock(Element e, String value) {
-        Element block = createBlock("text");
-        Element field = createFieldElement(block, "TEXT");
+        Element block = createBlock("Automation.TextCode");
+        Element field = createFieldElement(block, "CODE");
         field.setText(value);
         e.add(block);
         return block;

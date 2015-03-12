@@ -1,5 +1,5 @@
 <chains>
-<!--
+
     <chain id="AddAMapEntryToTheDataCollection">
       <operation id="Context.FetchDocument"/>
       <operation id="Context.SetVar">
@@ -30,7 +30,7 @@
         <param type="string" name="script">dataCollection.add(dataCollectionLine);</param>
       </operation>
     </chain>
- -->
+<!--
     <chain id="ExportDataChain">
       <operation id="Context.FetchDocument"/>
       <operation id="Document.Push"/>
@@ -65,7 +65,7 @@
         <param type="string" name="xpath">file:content</param>
       </operation>
     </chain>
-    <!--
+ -->
     <chain id="FetchAndSetDataFromConnectClient">
       <operation id="Context.FetchDocument"/>
       <operation id="Document.GetParent">
@@ -80,6 +80,7 @@ dataCollectionLine.put("connectClientRegistrationIp",Document["connectclient:reg
 dataCollectionLine.put("connectClientSalesForceId",Document["connectclient:salesForceId"]);</param>
       </operation>
     </chain>
+
     <chain id="FetchAndSetDataFromConnectProject">
       <operation id="Context.RunScript">
         <param type="string" name="script">dataCollectionLine.put("connectProjectId",Document.id);
@@ -89,6 +90,7 @@ dataCollectionLine.put("connectProjectTargetOS",Document["connectproject:targetO
 dataCollectionLine.put("connectProjectTargetStorage",Document["connectproject:Storage"]);</param>
       </operation>
     </chain>
+
     <chain id="FetchAndSetDataFromStudioProject">
       <operation id="Document.FetchByProperty">
         <param type="string" name="property">sp:projectId</param>
@@ -115,5 +117,5 @@ dataCollectionLine.put("studioProjectContributors",Document["sp:contributors"]);
 dataCollectionLine.put("studioProjectName",Document.name);</param>
       </operation>
     </chain>
-     -->
+
 </chains>

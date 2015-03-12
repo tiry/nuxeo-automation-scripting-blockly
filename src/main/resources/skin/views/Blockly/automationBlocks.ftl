@@ -3,6 +3,7 @@
 goog.provide('Blockly.Blocks.automation');
 
 goog.require('Blockly.Blocks');
+goog.require('Blockly.FieldTextArea');
 
 // Swallow Block
 Blockly.Blocks['Automation.SwallowOutput'] = {
@@ -53,8 +54,23 @@ Blockly.JavaScript['Automation.GetDocumentProperty'] = function (block) {
 
 
 
+// Automation TextCode
+Blockly.Blocks['Automation.TextCode'] = {
+  init: function() {
+    this.setColour(220);
+    this.appendDummyInput()
+      .appendField(new Blockly.FieldTextArea(''), 'CODE'); //FieldTextArea
+   this.setOutput(true);
+ }
+};
 
-// GetDocumentproperty
+Blockly.JavaScript['Automation.TextCode'] = function (block) {
+  var code = block.getFieldValue('CODE');
+  code = code.split("\n").join("\\n");
+  return ['"' + code + '"' ,  Blockly.JavaScript.ORDER_NONE];
+};
+
+// JSExpression
 Blockly.Blocks['Automation.JSExpression'] = {
   init: function() {
     this.setColour(220);

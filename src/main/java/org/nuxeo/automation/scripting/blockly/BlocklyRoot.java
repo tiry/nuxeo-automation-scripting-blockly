@@ -17,6 +17,7 @@
 
 package org.nuxeo.automation.scripting.blockly;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -32,6 +33,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
 import org.apache.commons.io.IOUtils;
+import org.nuxeo.automation.scripting.blockly.converter.Chains2Blockly;
 import org.nuxeo.ecm.automation.AutomationService;
 import org.nuxeo.ecm.automation.OperationException;
 import org.nuxeo.ecm.automation.OperationType;
@@ -39,9 +41,6 @@ import org.nuxeo.ecm.core.api.Blob;
 import org.nuxeo.ecm.core.api.impl.blob.StringBlob;
 import org.nuxeo.ecm.platform.web.common.ServletHelper;
 import org.nuxeo.ecm.webengine.forms.FormData;
-import org.nuxeo.ecm.webengine.model.Resource;
-import org.nuxeo.ecm.webengine.model.ResourceType;
-import org.nuxeo.ecm.webengine.model.WebContext;
 import org.nuxeo.ecm.webengine.model.WebObject;
 import org.nuxeo.ecm.webengine.model.impl.ModuleRoot;
 import org.nuxeo.runtime.api.Framework;
@@ -109,6 +108,18 @@ public class BlocklyRoot extends ModuleRoot {
     @Produces({ "text/xml"})
     public Object getToolbox() {
         return getView("toolbox");
+    }
+
+    @POST
+    @Path("/convert")
+    @Produces({ "text/xml"})
+    public String convert() throws Exception {
+        FormData form = getContext().getForm();
+        String xmlChain = form.getString("xmlChain");
+        InputStream xmlStream = new ByteArrayInputStream(xmlChain.getBytes());
+        Chains2Blockly converter = new Chains2Blockly();
+        String xml = converter.convert(xmlStream).asXML();
+        return xml;
     }
 
     @POST

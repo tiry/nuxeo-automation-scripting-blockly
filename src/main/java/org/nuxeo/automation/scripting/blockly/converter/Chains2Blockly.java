@@ -19,10 +19,15 @@ package org.nuxeo.automation.scripting.blockly.converter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.dom4j.Element;
+import org.dom4j.Node;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
 import org.nuxeo.automation.scripting.blockly.BlocklyOperationWrapper;
@@ -42,6 +47,30 @@ public class Chains2Blockly {
 
     protected static Log log = LogFactory.getLog(Chains2Blockly.class);
 
+    public class Config {
+
+        protected int maxPipeDepth = -1;
+
+        protected boolean mergeSubChains = true;
+
+        protected boolean replaceContextOperations = false;
+
+    }
+
+    public final Config config;
+
+    public Chains2Blockly() {
+        config = new Config();
+    }
+
+    public Chains2Blockly(Config config) {
+        this.config = config;
+    }
+
+    public Config getConfig() {
+        return config;
+    }
+
     public String convertXML(InputStream xmlChains) throws IOException {
         Element root = convert(xmlChains);
         OutputFormat format = OutputFormat.createPrettyPrint();
@@ -57,10 +86,61 @@ public class Chains2Blockly {
         ChainsGroup chains = load(xmlChains);
         Element root = XMLSerializer.createRoot();
 
-        for (OperationChainContribution chain : chains.getTopLevelChains()) {
-            convertChain(root, chain, chains);
+        Map<String, Element> convertedChains = new HashMap<String, Element>();
+
+        for (OperationChainContribution chain : chains.getAllChains()) {
+            Element chainRoot = XMLSerializer.createChainElement(chain.getId());
+            convertChain(chainRoot, chain, chains);
+            convertedChains.put(chain.getId(), chainRoot);
+        }
+
+        assembleChains(convertedChains);
+
+        for (Element chainRoot : convertedChains.values()) {
+            for (Object e : chainRoot.elements()) {
+                root.add(((Element) e).createCopy());
+            }
         }
         return root;
+    }
+
+    // dom4j selectNodes does not seem to work !
+    protected List<Element> findPlaceHolders(Element root) {
+        List<Element> result = new ArrayList<Element>();
+        for (int i = 0, size = root.nodeCount(); i < size; i++) {
+            Node node = root.node(i);
+            if (node instanceof Element) {
+                Element e = (Element) node;
+                if (e.getName().equals("placeHolder")) {
+                    result.add(e);
+                }
+                result.addAll(findPlaceHolders(e));
+            }
+        }
+        return result;
+    }
+
+    protected void assembleChains(Map<String, Element> convertedChains) {
+
+        // / XXX handle recursion !
+
+        for (String name : convertedChains.keySet()) {
+            Element chain = convertedChains.get(name);
+            for (Element placeHolder : findPlaceHolders(chain)) {
+                String target = placeHolder.attributeValue("target");
+                Element targetChain = (Element)convertedChains.get(target).elements().get(0);
+                if (targetChain != null) {
+
+                    Element parent = placeHolder.getParent();
+                    placeHolder.detach();
+
+                    if ("Automation.SwallowOutput".equals(targetChain.attributeValue("type"))) {
+                        targetChain = (Element) targetChain.element("value").elements().get(0);
+                    }
+                    parent.add(targetChain.createCopy());
+                }
+            }
+        }
     }
 
     protected OperationBlock swallow(OperationBlock block) {
@@ -115,9 +195,9 @@ public class Chains2Blockly {
         state.lastStacked = block;
     }
 
-    protected void convertChain(Element root2, OperationChainContribution chain, ChainsGroup chains) {
+    protected void convertChain(Element root, OperationChainContribution chain, ChainsGroup chainsd) {
 
-        OpBlocks state = new OpBlocks(root2);
+        OpBlocks state = new OpBlocks(root);
 
         for (Operation op : chain.getOps()) {
             if (!skipOperation(op.getId())) {
@@ -183,22 +263,52 @@ public class Chains2Blockly {
         return false;
     }
 
+    protected OperationBlock getSubstitutionBlock(Operation op) {
+
+        if (op.getId().equals("Context.RunOperation")) {
+            String target = null;
+            String params = null;
+            for (OperationChainContribution.Param opp : op.getParams()) {
+                if (opp.getName().equals("id")) {
+                    target = opp.getValue();
+                }
+                if (opp.getName().equals("parameters")) {
+                    params = opp.getValue();
+                }
+            }
+            if (target != null) {
+                target = target.trim();
+                Element block = XMLSerializer.createPlaceHolder(target, params);
+                // we do not handle parameters as they can be dynamic !
+                // Properties props = new Properties(params);
+                return new OperationBlock(block, new BlocklyOperationWrapper());
+            }
+        }
+
+        return null;
+    }
+
     protected OperationBlock createOperationBlock(Operation op) {
 
-        Element block = XMLSerializer.createBlock(op.getId());
         OperationBlock opBlock = null;
         try {
-            OperationType type = Framework.getService(AutomationService.class).getOperation(op.getId());
 
-            BlocklyOperationWrapper wrapper = new BlocklyOperationWrapper(type);
+            if (config.mergeSubChains) {
+                opBlock = getSubstitutionBlock(op);
+            }
+            if (opBlock == null) {
+                Element block = XMLSerializer.createBlock(op.getId());
+                OperationType type = Framework.getService(AutomationService.class).getOperation(op.getId());
+                BlocklyOperationWrapper wrapper = new BlocklyOperationWrapper(type);
+                opBlock = new OperationBlock(block, wrapper);
+            }
 
-            opBlock = new OperationBlock(block, wrapper);
-            if (wrapper.hasInput()) {
-                Element value = XMLSerializer.createValueElement(block, "INPUT");
+            if (opBlock.getWrapper().hasInput()) {
+                Element value = XMLSerializer.createValueElement(opBlock.getBlock(), "INPUT");
                 opBlock.setInput(value);
             }
 
-            for (Param p : wrapper.getParams()) {
+            for (Param p : opBlock.getWrapper().getParams()) {
                 OperationChainContribution.Param parameter = null;
                 for (OperationChainContribution.Param opp : op.getParams()) {
                     if (opp.getName().equals(p.getName())) {
@@ -209,13 +319,13 @@ public class Chains2Blockly {
                 if (parameter != null && parameter.getValue() != null && !parameter.getValue().isEmpty()) {
                     Element e = null;
                     if (p.getType().equalsIgnoreCase("boolean")) {
-                        e = XMLSerializer.createFieldElement(block, p.getName());
+                        e = XMLSerializer.createFieldElement(opBlock.getBlock(), p.getName());
 
                     } else if (p.getType().equalsIgnoreCase("integer")) {
-                        e = XMLSerializer.createValueElement(block, p.getName());
+                        e = XMLSerializer.createValueElement(opBlock.getBlock(), p.getName());
                         XMLSerializer.createIntBlock(e, parameter.getValue());
                     } else {
-                        e = XMLSerializer.createValueElement(block, p.getName());
+                        e = XMLSerializer.createValueElement(opBlock.getBlock(), p.getName());
                         XMLSerializer.createTextBlock(e, parameter.getValue());
                     }
                 }

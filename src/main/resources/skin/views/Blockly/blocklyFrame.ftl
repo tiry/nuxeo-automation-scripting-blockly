@@ -5,6 +5,7 @@
     <script src="${skinPath}/blockly/blockly_compressed.js"></script>
     <script src="${skinPath}/blockly/gen/javascript_compressed.js"></script>
     <script src="${skinPath}/blockly/blocks_compressed.js"></script>
+    <script src="${skinPath}/blockly/field_textarea.js"></script>
     <script src="${skinPath}/blockly/msg/js/en.js"></script>
     <script src="${Root.path}/blocks"></script>
     <style>

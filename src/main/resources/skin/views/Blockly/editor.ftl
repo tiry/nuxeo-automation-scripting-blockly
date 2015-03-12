@@ -60,6 +60,17 @@
     console.log(xmlToLoad);
     var xml = Blockly.Xml.textToDom(xmlToLoad);
     Blockly.Xml.domToWorkspace(Blockly.mainWorkspace, xml);
+    switchTab(jQuery("#tab_blockly"));
+  }
+
+  function chain2Blockly() {
+    var xmlToLoad = jQuery(jQuery("#xmlChain")[0]).val();
+    var url = "${Context.baseURL}${Root.path}/convert";
+    var payload = {"xmlChain" : xmlToLoad};
+    jQuery.post(url, payload , function(xmlData) {
+       var xml = Blockly.Xml.textToDom(xmlData);
+       Blockly.Xml.domToWorkspace(Blockly.mainWorkspace, xml);
+       switchTab(jQuery("#tab_blockly"));}, "text");
   }
 
   function switchTab(tab) {
@@ -84,7 +95,7 @@
   function filter(e) {
    var value = jQuery("#filterValue").val();
    var url = "${Context.baseURL}${Root.path}/toolbox?filter=" +  value;
-   jQuery.get(url, function(xmlData) { console.log(xmlData); Blockly.updateToolbox(xmlData)}, "text");
+   jQuery.get(url, function(xmlData) { Blockly.updateToolbox(xmlData)}, "text");
   }
 
 </script>
@@ -93,6 +104,7 @@
         <li id="tab_blockly" role="presentation" class="active" onclick="switchTab(this)"><a href="#">Blockly Editor</a></li>
         <li id="tab_js" role="presentation"  onclick="switchTab(this)"><a href="#">Generated JavaScript</a></li>
         <li id="tab_xml" role="presentation"  onclick="switchTab(this)"><a href="#">XML Blocks</a></li>
+        <li id="tab_chain" role="presentation"  onclick="switchTab(this)"><a href="#">Convert Automation Chains</a></li>
 </ul>
 
 <div class="tabContent" id="content_blockly">
@@ -185,6 +197,26 @@
     </td>
 </tr>
 </table>
+</div>
+
+<div class="tabContent" id="content_chain" style="display:none">
+<table>
+<tr>
+  <td>
+      <textarea class="language-xml" name="xmlChain" id="xmlChain" cols="120" rows="30"></textarea>
+    </td>
+    <td style="padding:10px">
+
+           <div class="panel panel-default">
+              <div class="panel-heading">
+                XML to Blocks
+              </div>
+              <div class="panel-body">
+                <button type="submit" class="btn btn-lg btn-primary" onclick="chain2Blockly()">Convert XML Chain</button>
+              </div>
+            </div>
+
+  </table>
 </div>
 
 <textarea id="xmlToLoad" cols="40" rows="2" style="display:none">
