@@ -47,13 +47,47 @@ public class Chains2Blockly {
 
     protected static Log log = LogFactory.getLog(Chains2Blockly.class);
 
-    public class Config {
+    public static class Config {
 
         protected int maxPipeDepth = -1;
 
         protected boolean mergeSubChains = true;
 
         protected boolean replaceContextOperations = false;
+
+        protected boolean removeMergedChains = true;
+
+        public int getMaxPipeDepth() {
+            return maxPipeDepth;
+        }
+
+        public void setMaxPipeDepth(int maxPipeDepth) {
+            this.maxPipeDepth = maxPipeDepth;
+        }
+
+        public boolean isMergeSubChains() {
+            return mergeSubChains;
+        }
+
+        public void setMergeSubChains(boolean mergeSubChains) {
+            this.mergeSubChains = mergeSubChains;
+        }
+
+        public boolean isReplaceContextOperations() {
+            return replaceContextOperations;
+        }
+
+        public void setReplaceContextOperations(boolean replaceContextOperations) {
+            this.replaceContextOperations = replaceContextOperations;
+        }
+
+        public boolean isRemoveMergedChains() {
+            return removeMergedChains;
+        }
+
+        public void setRemoveMergedChains(boolean removeMergedChains) {
+            this.removeMergedChains = removeMergedChains;
+        }
 
     }
 
@@ -94,9 +128,19 @@ public class Chains2Blockly {
             convertedChains.put(chain.getId(), chainRoot);
         }
 
-        assembleChains(convertedChains);
+        List<String> nestedChains = new ArrayList<String>();
 
-        for (Element chainRoot : convertedChains.values()) {
+        assembleChains(convertedChains, nestedChains);
+
+
+        for (String chainName : convertedChains.keySet()) {
+            Element chainRoot = convertedChains.get(chainName);
+            if (config.removeMergedChains) {
+                if (nestedChains.contains(chainName)) {
+                    // skip it
+                    continue;
+                }
+            }
             for (Object e : chainRoot.elements()) {
                 root.add(((Element) e).createCopy());
             }
@@ -120,7 +164,7 @@ public class Chains2Blockly {
         return result;
     }
 
-    protected void assembleChains(Map<String, Element> convertedChains) {
+    protected void assembleChains(Map<String, Element> convertedChains, List<String> nestedChains) {
 
         // / XXX handle recursion !
 
@@ -130,7 +174,7 @@ public class Chains2Blockly {
                 String target = placeHolder.attributeValue("target");
                 Element targetChain = (Element)convertedChains.get(target).elements().get(0);
                 if (targetChain != null) {
-
+                    nestedChains.add(target);
                     Element parent = placeHolder.getParent();
                     placeHolder.detach();
 
@@ -308,25 +352,27 @@ public class Chains2Blockly {
                 opBlock.setInput(value);
             }
 
-            for (Param p : opBlock.getWrapper().getParams()) {
-                OperationChainContribution.Param parameter = null;
-                for (OperationChainContribution.Param opp : op.getParams()) {
-                    if (opp.getName().equals(p.getName())) {
-                        parameter = opp;
-                        break;
+            if (opBlock.getWrapper().getParams()!=null) {
+                for (Param p : opBlock.getWrapper().getParams()) {
+                    OperationChainContribution.Param parameter = null;
+                    for (OperationChainContribution.Param opp : op.getParams()) {
+                        if (opp.getName().equals(p.getName())) {
+                            parameter = opp;
+                            break;
+                        }
                     }
-                }
-                if (parameter != null && parameter.getValue() != null && !parameter.getValue().isEmpty()) {
-                    Element e = null;
-                    if (p.getType().equalsIgnoreCase("boolean")) {
-                        e = XMLSerializer.createFieldElement(opBlock.getBlock(), p.getName());
+                    if (parameter != null && parameter.getValue() != null && !parameter.getValue().isEmpty()) {
+                        Element e = null;
+                        if (p.getType().equalsIgnoreCase("boolean")) {
+                            e = XMLSerializer.createFieldElement(opBlock.getBlock(), p.getName());
 
-                    } else if (p.getType().equalsIgnoreCase("integer")) {
-                        e = XMLSerializer.createValueElement(opBlock.getBlock(), p.getName());
-                        XMLSerializer.createIntBlock(e, parameter.getValue());
-                    } else {
-                        e = XMLSerializer.createValueElement(opBlock.getBlock(), p.getName());
-                        XMLSerializer.createTextBlock(e, parameter.getValue());
+                        } else if (p.getType().equalsIgnoreCase("integer")) {
+                            e = XMLSerializer.createValueElement(opBlock.getBlock(), p.getName());
+                            XMLSerializer.createIntBlock(e, parameter.getValue());
+                        } else {
+                            e = XMLSerializer.createValueElement(opBlock.getBlock(), p.getName());
+                            XMLSerializer.createTextBlock(e, parameter.getValue());
+                        }
                     }
                 }
             }

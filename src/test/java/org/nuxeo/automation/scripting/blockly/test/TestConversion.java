@@ -18,6 +18,7 @@ package org.nuxeo.automation.scripting.blockly.test;
 
 import java.io.InputStream;
 
+import org.dom4j.Element;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.nuxeo.automation.scripting.blockly.converter.Chains2Blockly;
@@ -25,7 +26,10 @@ import org.nuxeo.ecm.automation.test.AutomationFeature;
 import org.nuxeo.runtime.test.runner.Features;
 import org.nuxeo.runtime.test.runner.FeaturesRunner;
 
-import junit.framework.Assert;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 
 /**
  *
@@ -37,18 +41,45 @@ import junit.framework.Assert;
 @Features({ AutomationFeature.class })
 public class TestConversion {
 
-    @Test
-    public void testConvert() throws Exception{
+    protected InputStream getXml(String name) {
+        InputStream xmlStream = this.getClass().getResourceAsStream(name);
+        assertNotNull(xmlStream);
+        return xmlStream;
+    }
 
-        InputStream xmlStream = this.getClass().getResourceAsStream("/chains.xml");
-        Assert.assertNotNull(xmlStream);
+    @Test
+    public void testMergeNested() throws Exception{
 
         Chains2Blockly converter = new Chains2Blockly();
-        String xml = converter.convertXML(xmlStream);
+        Element tree = converter.convert(getXml("/simpleNestedCall.xml"));
 
-        System.out.println(xml);
+        // check that the 2 nested chains where merged
+        assertEquals(1, tree.elements().size());
 
+        // check that we have 2 level nesting
+        Element next = tree.element("block").element("next");
+        assertNotNull(next);
+        Element next2 = next.element("block").element("next");
+        assertNotNull(next2);
 
+        String xml = converter.convertXML(getXml("/simpleNestedCall.xml"));
+        assertFalse(xml.contains("Nested1"));
+        assertFalse(xml.contains("Nested2"));
+
+    }
+
+    @Test
+    public void testNotMergeNested() throws Exception{
+
+        Chains2Blockly.Config config  = new Chains2Blockly.Config();
+        config.setMergeSubChains(false);
+        Chains2Blockly converter = new Chains2Blockly(config);
+        Element tree = converter.convert(getXml("/simpleNestedCall.xml"));
+        assertEquals(3, tree.elements().size());
+
+        String xml = converter.convertXML(getXml("/simpleNestedCall.xml"));
+        assertTrue(xml.contains("Nested1"));
+        assertTrue(xml.contains("Nested2"));
 
     }
 

@@ -30,7 +30,7 @@
         <param type="string" name="script">dataCollection.add(dataCollectionLine);</param>
       </operation>
     </chain>
-<!--
+
     <chain id="ExportDataChain">
       <operation id="Context.FetchDocument"/>
       <operation id="Document.Push"/>
@@ -65,7 +65,7 @@
         <param type="string" name="xpath">file:content</param>
       </operation>
     </chain>
- -->
+
     <chain id="FetchAndSetDataFromConnectClient">
       <operation id="Context.FetchDocument"/>
       <operation id="Document.GetParent">

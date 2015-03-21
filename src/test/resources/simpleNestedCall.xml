@@ -1,0 +1,51 @@
+<chains>
+
+    <chain id="master">
+      <operation id="Context.FetchDocument"/>
+      <operation id="Context.SetVar">
+        <param type="string" name="name">dataCollectionLine</param>
+        <param type="object" name="value">expr:new java.util.HashMap()</param>
+      </operation>
+      <operation id="LogOperation">
+        <param type="string" name="level">debug</param>
+        <param type="string" name="message">afterDataCollectionLine instanciation</param>
+      </operation>
+      <operation id="Context.RunOperation">
+        <param type="string" name="id">Nested1</param>
+        <param type="boolean" name="isolate">false</param>
+      </operation>
+      <operation id="Context.RunOperation">
+        <param type="string" name="id">Nested2</param>
+        <param type="boolean" name="isolate">false</param>
+      </operation>
+    </chain>
+
+    <chain id="Nested1">
+      <operation id="Context.FetchDocument"/>
+      <operation id="Document.Push"/>
+      <operation id="Context.SetVar">
+        <param type="string" name="name">dataCollection</param>
+        <param type="object" name="value">expr:new java.util.ArrayList()</param>
+      </operation>
+      <operation id="Document.Query">
+        <param type="string" name="query">SELECT * FROM Document where ecm:primaryType ="ConnectProject"</param>
+        <param type="string" name="language">NXQL</param>
+      </operation>
+    </chain>
+
+    <chain id="Nested2">
+       <operation id="Context.FetchDocument"/>
+      <operation id="Document.GetParent">
+        <param type="string" name="type">ConnectClient</param>
+      </operation>
+      <operation id="Context.RunScript">
+        <param type="string" name="script">dataCollectionLine.put("connectClientId",Document.id);
+dataCollectionLine.put("connectClientTitle",Document.title);
+dataCollectionLine.put("connectClientShortName",Document["connectclient:shortName"]);
+dataCollectionLine.put("connectClientNuxeoRegion",Document["connectclient:nuxeoRegion"]);
+dataCollectionLine.put("connectClientRegistrationIp",Document["connectclient:registrationIp"]);
+dataCollectionLine.put("connectClientSalesForceId",Document["connectclient:salesForceId"]);</param>
+      </operation>
+    </chain>
+
+</chains>
