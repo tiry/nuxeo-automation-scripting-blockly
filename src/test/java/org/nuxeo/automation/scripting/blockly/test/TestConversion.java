@@ -83,4 +83,24 @@ public class TestConversion {
 
     }
 
+    @Test
+    public void testMergeNoLoop() throws Exception{
+
+        Chains2Blockly converter = new Chains2Blockly();
+        Element tree = converter.convert(getXml("/RunDocChainNoList.xml"));
+        String xml = converter.convertXML(getXml("/RunDocChainNoList.xml"));
+
+        System.out.println(xml);
+
+        assertFalse(xml.contains("Nested1"));
+
+        // check that the 2 nested chains where merged
+        assertEquals(1, tree.elements().size());
+
+        // check that we have 2 level nesting
+        Element next = tree.element("block").element("next");
+        assertNotNull(next);
+
+    }
+
 }

@@ -164,6 +164,7 @@ public class Chains2Blockly {
         return result;
     }
 
+
     protected void assembleChains(Map<String, Element> convertedChains, List<String> nestedChains) {
 
         // / XXX handle recursion !
@@ -172,16 +173,43 @@ public class Chains2Blockly {
             Element chain = convertedChains.get(name);
             for (Element placeHolder : findPlaceHolders(chain)) {
                 String target = placeHolder.attributeValue("target");
+                Boolean allowPipe = Boolean.parseBoolean(placeHolder.attributeValue("allowPipe"));
                 Element targetChain = (Element)convertedChains.get(target).elements().get(0);
                 if (targetChain != null) {
                     nestedChains.add(target);
                     Element parent = placeHolder.getParent();
+                    Element previousBlock = BlockHelper.getPreviousBlock(placeHolder);
+
                     placeHolder.detach();
 
-                    if ("Automation.SwallowOutput".equals(targetChain.attributeValue("type"))) {
-                        targetChain = (Element) targetChain.element("value").elements().get(0);
+                    if (BlockHelper.isSwallowBlock(targetChain)) {
+                        targetChain =BlockHelper.getInputElementValue(targetChain);
                     }
-                    parent.add(targetChain.createCopy());
+
+                    targetChain = targetChain.createCopy();
+
+                    Element input = BlockHelper.getInputElement(targetChain);
+                    if (allowPipe && input!=null) {
+                        // try to pipe chain
+                        if (input.elements().size()==0) {
+                           Element inputValue = parent.getParent();
+                           if (BlockHelper.isSwallowBlock(inputValue)) {
+                               inputValue = BlockHelper.getInputElementValue(inputValue);
+                           }
+
+                           Element newParent = previousBlock;
+
+                           inputValue.detach();
+                           input.add(inputValue);
+
+                           newParent.add(targetChain);
+
+                        }
+                    } else {
+                        parent.add(targetChain);
+                    }
+
+
                 }
             }
         }
@@ -246,7 +274,7 @@ public class Chains2Blockly {
         for (Operation op : chain.getOps()) {
             if (!skipOperation(op.getId())) {
 
-                OperationBlock block = createOperationBlock(op);
+                OperationBlock block = createOperationBlock(op,state);
 
                 if (state.lastProcessed != null) {
                     if (state.lastResult != null) {
@@ -307,7 +335,7 @@ public class Chains2Blockly {
         return false;
     }
 
-    protected OperationBlock getSubstitutionBlock(Operation op) {
+    protected OperationBlock getSubstitutionBlock(Operation op,OpBlocks state) {
 
         if (op.getId().equals("Context.RunOperation")) {
             String target = null;
@@ -322,7 +350,27 @@ public class Chains2Blockly {
             }
             if (target != null) {
                 target = target.trim();
-                Element block = XMLSerializer.createPlaceHolder(target, params);
+                Element block = XMLSerializer.createPlaceHolder(target, params,false, false);
+                // we do not handle parameters as they can be dynamic !
+                // Properties props = new Properties(params);
+                return new OperationBlock(block, new BlocklyOperationWrapper());
+            }
+        }
+        else if (op.getId().equals("Context.RunDocumentOperation")) {
+            String target = null;
+            String params = null;
+            for (OperationChainContribution.Param opp : op.getParams()) {
+                if (opp.getName().equals("id")) {
+                    target = opp.getValue();
+                }
+                if (opp.getName().equals("parameters")) {
+                    params = opp.getValue();
+                }
+            }
+            if (target != null) {
+                target = target.trim();
+                boolean loop = state.lastResult.getWrapper().canOutputList();
+                Element block = XMLSerializer.createPlaceHolder(target, params,loop, true);
                 // we do not handle parameters as they can be dynamic !
                 // Properties props = new Properties(params);
                 return new OperationBlock(block, new BlocklyOperationWrapper());
@@ -332,13 +380,13 @@ public class Chains2Blockly {
         return null;
     }
 
-    protected OperationBlock createOperationBlock(Operation op) {
+    protected OperationBlock createOperationBlock(Operation op,OpBlocks state) {
 
         OperationBlock opBlock = null;
         try {
 
             if (config.mergeSubChains) {
-                opBlock = getSubstitutionBlock(op);
+                opBlock = getSubstitutionBlock(op,state);
             }
             if (opBlock == null) {
                 Element block = XMLSerializer.createBlock(op.getId());

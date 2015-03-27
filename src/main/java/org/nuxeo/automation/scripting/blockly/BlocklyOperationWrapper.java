@@ -98,7 +98,7 @@ public class BlocklyOperationWrapper {
         return !hasInput() && !hasInput();
     }
 
-    public String getOutputType() {
+    public List<String> getOutputTypes() {
         List<String> types = new ArrayList<>();
         for (InvokableMethod meth : type.getMethods()) {
             if (!meth.getOutputType().equals(Void.TYPE) ) {
@@ -107,11 +107,23 @@ public class BlocklyOperationWrapper {
                 }
             }
         }
+        return types;
+    }
+
+    public String getOutputType() {
+        List<String> types = getOutputTypes();
         if (types.size()==1) {
             return types.get(0);
         }
         return null;
     }
+
+    public boolean canOutputList(){
+        return getOutputTypes().contains("Array");
+    }
+
+
+
 
     protected String getOutputTypeMapping(String type) {
         if (DocumentModelList.class.getSimpleName().equals(type)) {

@@ -1,0 +1,28 @@
+<chains>
+
+    <chain id="master">
+      <operation id="Context.FetchDocument"/>
+        <operation id="Document.Create">
+        <param type="string" name="type">MailMessage</param>
+        <param type="string" name="name">expr:Context["mailDocumentName"]</param>
+        <param type="properties" name="properties">expr:mail:messageId=@{messageId}
+        </param>
+      </operation>
+      <operation id="Context.RunDocumentOperation">
+        <param type="string" name="id">Nested1</param>
+        <param type="boolean" name="isolate">false</param>
+      </operation>
+    </chain>
+
+    <chain id="Nested1">
+      <operation id="Context.FetchDocument"/>
+      <operation id="Document.SetProperty">
+        <param type="string" name="xpath">dc:title</param>
+        <param type="serializable" name="value">
+          Modified
+        </param>
+        <param type="boolean" name="save">false</param>
+      </operation>
+    </chain>
+
+</chains>

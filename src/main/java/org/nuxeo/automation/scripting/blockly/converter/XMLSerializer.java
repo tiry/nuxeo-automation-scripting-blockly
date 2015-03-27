@@ -81,13 +81,14 @@ public class XMLSerializer {
         return block;
     }
 
-    public static Element createPlaceHolder(String target, String parameters) {
+    public static Element createPlaceHolder(String target, String parameters, boolean loop, boolean allowPipe) {
         Element block =  DocumentFactory.getInstance().createElement(placeHolderTag);
         block.addAttribute("target", target);
         block.addAttribute("id", counter.incrementAndGet()+"");
         if (parameters!=null) {
             block.addAttribute("parameters", parameters);
         }
+        block.addAttribute("allowPipe", Boolean.toString(allowPipe));
         return block;
     }
 
