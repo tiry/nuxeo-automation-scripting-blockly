@@ -2,11 +2,8 @@
 
     <chain id="master">
       <operation id="Context.FetchDocument"/>
-        <operation id="Document.Create">
-        <param type="string" name="type">MailMessage</param>
-        <param type="string" name="name">expr:Context["mailDocumentName"]</param>
-        <param type="properties" name="properties">expr:mail:messageId=@{messageId}
-        </param>
+      <operation id="Repository.GetDocument">
+	      <param type="string" name="value">/</param>
       </operation>
       <operation id="Context.RunDocumentOperation">
         <param type="string" name="id">Nested1</param>

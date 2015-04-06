@@ -90,7 +90,7 @@ public class TestConversion {
         Element tree = converter.convert(getXml("/RunDocChainNoList.xml"));
         String xml = converter.convertXML(getXml("/RunDocChainNoList.xml"));
 
-        System.out.println(xml);
+        //System.out.println(xml);
 
         assertFalse(xml.contains("Nested1"));
 
@@ -100,6 +100,52 @@ public class TestConversion {
         // check that we have 2 level nesting
         Element next = tree.element("block").element("next");
         assertNotNull(next);
+
+    }
+
+
+    @Test
+    public void testMergeNoLoopMulti() throws Exception{
+
+        Chains2Blockly converter = new Chains2Blockly();
+        Element tree = converter.convert(getXml("/RunDocChainNoListMulti.xml"));
+        String xml = converter.convertXML(getXml("/RunDocChainNoListMulti.xml"));
+
+        //System.out.println(xml);
+
+        assertFalse(xml.contains("Nested1"));
+
+        // check that the 2 nested chains where merged
+        assertEquals(1, tree.elements().size());
+
+        // check that we have 2 level nesting
+        Element next = tree.element("block").element("next");
+        assertNotNull(next);
+
+    }
+
+
+    @Test
+    public void testMergeWithLoop() throws Exception{
+
+        Chains2Blockly converter = new Chains2Blockly();
+        Element tree = converter.convert(getXml("/RunDocChain.xml"));
+        String xml = converter.convertXML(getXml("/RunDocChain.xml"));
+
+        System.out.println(xml);
+
+        assertFalse(xml.contains("Nested1"));
+
+        // check that the 2 nested chains where merged
+        assertEquals(1, tree.elements().size());
+
+        assertEquals("controls_forEach", tree.element("block").attributeValue("type"));
+
+        assertEquals("Automation.SwallowOutput",tree.element("block").element("statement").element("block").attributeValue("type"));
+
+        assertEquals("Document.SetProperty",tree.element("block").element("statement").element("block").element("value").element("block").attributeValue("type"));
+
+        assertEquals("Document.SetProperty",tree.element("block").element("statement").element("block").element("value").element("block").element("value").element("block").attributeValue("type"));
 
     }
 

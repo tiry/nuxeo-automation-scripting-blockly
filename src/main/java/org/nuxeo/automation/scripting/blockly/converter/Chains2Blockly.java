@@ -174,6 +174,7 @@ public class Chains2Blockly {
             for (Element placeHolder : findPlaceHolders(chain)) {
                 String target = placeHolder.attributeValue("target");
                 Boolean allowPipe = Boolean.parseBoolean(placeHolder.attributeValue("allowPipe"));
+                Boolean loop = Boolean.parseBoolean(placeHolder.attributeValue("loop"));
                 Element targetChain = (Element)convertedChains.get(target).elements().get(0);
                 if (targetChain != null) {
                     nestedChains.add(target);
@@ -188,7 +189,7 @@ public class Chains2Blockly {
 
                     targetChain = targetChain.createCopy();
 
-                    Element input = BlockHelper.getInputElement(targetChain);
+                    Element input = BlockHelper.getInputElementRecursive(targetChain);
                     if (allowPipe && input!=null) {
                         // try to pipe chain
                         if (input.elements().size()==0) {
@@ -198,12 +199,31 @@ public class Chains2Blockly {
                            }
 
                            Element newParent = previousBlock;
-
                            inputValue.detach();
-                           input.add(inputValue);
 
-                           newParent.add(targetChain);
 
+                           if (loop) {
+                               // wrap in a for each block !
+                               Element loopBlock = XMLSerializer.createLoopBlock(inputValue, targetChain);
+                               if(BlockHelper.isSwallowBlock(newParent)) {
+                                   Element realNewParent = BlockHelper.getPreviousBlock(newParent);
+                                   if (realNewParent==null){
+                                       realNewParent = newParent.getParent();
+                                   }
+                                   newParent.detach();
+                                   BlockHelper.getNext(realNewParent).add(loopBlock);
+
+                               } else {
+                                   BlockHelper.getNext(newParent).add(loopBlock);
+                               }
+                           } else {
+                               input.add(inputValue);
+                               newParent.add(targetChain);
+                           }
+
+                        } else {
+                            System.out.println(targetChain.asXML());
+                            throw new UnsupportedOperationException("Input should be null");
                         }
                     } else {
                         parent.add(targetChain);

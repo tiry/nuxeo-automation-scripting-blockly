@@ -5,13 +5,13 @@
   <parent>
     <groupId>org.nuxeo.ecm.platform</groupId>
     <artifactId>nuxeo-features-parent</artifactId>
-    <version>7.2-SNAPSHOT</version>
+    <version>7.3-SNAPSHOT</version>
   </parent>
 
   <groupId>org.nuxeo.addons</groupId>
   <artifactId>nuxeo-automation-scripting-blockly</artifactId>
   <name>nuxeo-automation-scripting-blockly</name>
-  <version>7.2-SNAPSHOT</version>
+  <version>7.3-SNAPSHOT</version>
   <description>
 
   </description>
@@ -19,7 +19,7 @@
     <dependency>
       <groupId>org.nuxeo.ecm.automation</groupId>
       <artifactId>nuxeo-automation-scripting</artifactId>
-      <version>7.2-SNAPSHOT</version></dependency>
+      <version>7.3-SNAPSHOT</version></dependency>
     <dependency>
       <groupId>org.nuxeo.common</groupId>
       <artifactId>nuxeo-common</artifactId>
@@ -72,6 +72,30 @@
     </dependency>
 
   </dependencies>
+
+  <repositories>
+    <repository>
+      <id>public</id>
+      <url>http://maven.nuxeo.org/nexus/content/groups/public</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>public-snapshot</id>
+      <url>http://maven.nuxeo.org/nexus/content/groups/public-snapshot</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <updatePolicy>always</updatePolicy>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
 
   <build>
     <plugins>

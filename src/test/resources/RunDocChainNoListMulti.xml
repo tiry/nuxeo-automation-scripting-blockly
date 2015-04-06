@@ -2,9 +2,8 @@
 
     <chain id="master">
       <operation id="Context.FetchDocument"/>
-      <operation id="Repository.Query">
-        <param type="string" name="query">SELECT * FROM Document where ecm:primaryType ="ConnectProject"</param>
-        <param type="string" name="language">NXQL</param>
+      <operation id="Repository.GetDocument">
+	      <param type="string" name="value">/</param>
       </operation>
       <operation id="Context.RunDocumentOperation">
         <param type="string" name="id">Nested1</param>
@@ -21,7 +20,7 @@
         </param>
         <param type="boolean" name="save">false</param>
       </operation>
-       <operation id="Document.SetProperty">
+      <operation id="Document.SetProperty">
         <param type="string" name="xpath">dc:description</param>
         <param type="serializable" name="value">
           Modified

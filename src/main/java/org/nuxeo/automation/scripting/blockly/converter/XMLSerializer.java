@@ -26,8 +26,11 @@ import org.dom4j.DocumentFactory;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
 import org.dom4j.QName;
-import org.nuxeo.ecm.automation.core.OperationChainContribution;
+import org.nuxeo.automation.scripting.blockly.BlocklyOperationWrapper;
+import org.nuxeo.ecm.automation.AutomationService;
+import org.nuxeo.ecm.automation.OperationType;
 import org.nuxeo.ecm.core.api.DocumentModel;
+import org.nuxeo.runtime.api.Framework;
 
 /**
  * {@link TemplateInput} parameters are stored in the {@link DocumentModel} as a single String Property via XML
@@ -55,11 +58,15 @@ public class XMLSerializer {
 
     public static final QName valueTag = DocumentFactory.getInstance().createQName("value", ns);
 
+    public static final QName statementTag = DocumentFactory.getInstance().createQName("statement", ns);
+
     public static final QName fieldTag = DocumentFactory.getInstance().createQName("field", ns);
 
     public static final QName nextTag = DocumentFactory.getInstance().createQName("next", ns);
 
     protected static AtomicInteger counter = new AtomicInteger();
+
+    protected static AtomicInteger varCounter = new AtomicInteger();
 
     public static Element createRoot() {
         return DocumentFactory.getInstance().createElement(xmlTag);
@@ -81,6 +88,44 @@ public class XMLSerializer {
         return block;
     }
 
+    public static Element createLoopBlock(Element list, Element statement) {
+        Element block =  DocumentFactory.getInstance().createElement(blockTag);
+
+        block.addAttribute("type", "controls_forEach");
+        block.addAttribute("id", counter.incrementAndGet()+"");
+        Element field = createFieldElement(block, "VAR");
+        String varName = "doc" + varCounter.incrementAndGet();
+        field.setText(varName);
+
+        Element listTag = createValueElement(block, "LIST");
+        listTag.add(list);
+
+        // swallow result ?
+
+        String lastOpName = statement.attributeValue("type");
+        try {
+            OperationType type = Framework.getService(AutomationService.class).getOperation(lastOpName);
+            if (new BlocklyOperationWrapper(type).hasOutput()) {
+                statement = createSwallowBlock(statement);
+            }
+        } catch (Exception e) {
+            throw new UnsupportedOperationException("Can not resolve " + lastOpName);
+        }
+
+        // pipe variable as input
+        Element inputSlot = BlockHelper.getInputElementRecursive(statement);
+        Element inputVar = createBlock("variables_get");
+        Element inputValue = createFieldElement(inputVar, "VAR");
+        inputValue.setText(varName);
+        inputSlot.add(inputVar);
+
+        Element statementTag = createStatementElement(block, "DO");
+        statementTag.add(statement);
+
+        return block;
+    }
+
+
     public static Element createPlaceHolder(String target, String parameters, boolean loop, boolean allowPipe) {
         Element block =  DocumentFactory.getInstance().createElement(placeHolderTag);
         block.addAttribute("target", target);
@@ -89,11 +134,19 @@ public class XMLSerializer {
             block.addAttribute("parameters", parameters);
         }
         block.addAttribute("allowPipe", Boolean.toString(allowPipe));
+        block.addAttribute("loop", Boolean.toString(loop));
         return block;
     }
 
     public static Element createValueElement(Element e, String name) {
         Element value = e.addElement(valueTag);
+        value.addAttribute("name", name);
+        return value;
+    }
+
+
+    public static Element createStatementElement(Element e, String name) {
+        Element value = e.addElement(statementTag);
         value.addAttribute("name", name);
         return value;
     }

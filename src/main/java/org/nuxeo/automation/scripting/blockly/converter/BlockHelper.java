@@ -19,8 +19,6 @@ package org.nuxeo.automation.scripting.blockly.converter;
 import org.dom4j.Element;
 import org.dom4j.dom.DOMNodeHelper;
 
-import com.sun.star.ucb.UnsupportedOpenModeException;
-
 /**
  *
  * @author <a href="mailto:tdelprat@nuxeo.com">Tiry</a>
@@ -28,15 +26,27 @@ import com.sun.star.ucb.UnsupportedOpenModeException;
  */
 public class BlockHelper {
 
-
     public static boolean isSwallowBlock(Element e) {
         return "Automation.SwallowOutput".equals(e.attributeValue("type"));
     }
 
+    public static Element getInputElementRecursive(Element block) {
+        Element input = getInputElement(block);
+        if (input != null) {
+            Element subBlock = getInputElementValue(block);
+            if (subBlock == null) {
+                return input;
+            } else {
+                return getInputElementRecursive(subBlock);
+            }
+        }
+        return null;
+    }
+
     public static Element getInputElement(Element block) {
-        for (Object o  : block.elements("value")) {
-            if ("INPUT".equals(((Element)o).attributeValue("name"))) {
-                return (Element)o;
+        for (Object o : block.elements("value")) {
+            if ("INPUT".equals(((Element) o).attributeValue("name"))) {
+                return (Element) o;
             }
         }
         return null;
@@ -44,7 +54,7 @@ public class BlockHelper {
 
     public static Element getInputElementValue(Element block) {
         Element input = getInputElement(block);
-        if (input !=null) {
+        if (input != null && input.elements().size() > 0) {
             return (Element) input.elements().get(0);
         } else {
             return null;
@@ -53,16 +63,26 @@ public class BlockHelper {
 
     public static Element getPreviousBlock(Element block) {
 
-        if(!"block".equals(block.getName()) && !"placeHolder".equals(block.getName())) {
-            throw new UnsupportedOperationException(block.getName() + " is not a block!");
+        if (!"block".equals(block.getName())
+                && !"placeHolder".equals(block.getName())) {
+            throw new UnsupportedOperationException(block.getName()
+                    + " is not a block!");
         }
 
         Element parentBlock = block.getParent();
-        if ("next".equals(parentBlock.getName())){
+        if ("next".equals(parentBlock.getName())) {
             return parentBlock.getParent();
         }
 
         return (Element) DOMNodeHelper.getPreviousSibling(block);
+    }
+
+    public static Element getNext(Element block) {
+        if (!"block".equals(block.getName())
+                && !"placeHolder".equals(block.getName())) {
+            return block;
+        }
+        return block.element("next");
     }
 
 }
